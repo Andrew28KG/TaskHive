@@ -70,7 +70,12 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 - Tasks assigned to you are highlighted with an orange background and "Your Task" label
 - Use the navigation menu to access other features
 
-### 3. Task Management
+### 3. Project Management (Hive)
+- **Create Project**: Tap the floating action button (+) to create a new Project
+- **Assigned**: View the task and their assigned members
+- **Add Description**: Provide detailed information about the project
+- 
+### 4. Task Management (Bees)
 - **Create Task**: Tap the floating action button (+) to create a new task
 - **Assign Task**: Select team members to assign the task to
 - **Set Priority**: Choose between low, medium, and high priority
@@ -78,22 +83,26 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 - **Add Description**: Provide detailed information about the task
 - **Add Comments**: Discuss tasks with team members through comments
 
-### 4. Calendar
+### 5. Calendar
 - View tasks and events in a calendar layout
 - Tap on a date to see all tasks and events for that day
 - Create events by tapping the (+) button (team hosts only)
 - Select event attendees from your team members
 
-### 5. Team Management
+### 6. Team Management
 - Create a new team or join existing teams
 - Invite members to your team using their email addresses
 - Assign roles (admin, member) to control permissions
 - Collaborate on tasks and projects within your team
 
-### 6. Progress Tracking
+### 7. Progress Tracking
 - Monitor task completion status
 - Track project milestones and deadlines
 - View team member contributions and activity
+
+### 8. Focus Mode
+- Choose a task to focus on
+- Provides a timer and note to track details of task
 
 ## Security Note
 
