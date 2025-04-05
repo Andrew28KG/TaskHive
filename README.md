@@ -22,6 +22,7 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 - **Dark/Light Mode**: Choose between light and dark themes for comfortable viewing
 - **Progress Tracking**: Monitor task completion and project progress
 - **Analytics**: View insights on team performance and productivity metrics
+- **Focus Mode**: Choose a task to focus on with provided tools
 
 ## Getting Started
 
@@ -63,7 +64,6 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 ### 1. Authentication
 - **Sign Up**: Create a new account using email and password
 - **Login**: Access your account with your credentials
-- **Reset Password**: Use the "Forgot Password" option if needed
 
 ### 2. Dashboard
 - View all your tasks, organized by priority and due date
