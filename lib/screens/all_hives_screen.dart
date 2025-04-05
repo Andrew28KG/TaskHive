@@ -69,6 +69,66 @@ class _AllHivesScreenState extends State<AllHivesScreen> {
     }).toList();
   }
 
+  Widget _buildStatusChip(HiveStatus status) {
+    Color color;
+    String label;
+    IconData icon;
+
+    switch (status) {
+      case HiveStatus.active:
+        color = Colors.green;
+        label = 'Active';
+        icon = Icons.play_arrow;
+        break;
+      case HiveStatus.paused:
+        color = Colors.orange;
+        label = 'Paused';
+        icon = Icons.pause;
+        break;
+      case HiveStatus.completed:
+        color = Colors.blue;
+        label = 'Completed';
+        icon = Icons.check_circle;
+        break;
+      case HiveStatus.archived:
+        color = Colors.grey;
+        label = 'Archived';
+        icon = Icons.archive;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,7 +184,7 @@ class _AllHivesScreenState extends State<AllHivesScreen> {
             leading: const Icon(Icons.hive, color: Colors.amber),
             title: Text(hive.name),
             subtitle: Text(hive.description),
-            trailing: Text(hive.status.toString()),
+            trailing: _buildStatusChip(hive.status),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(

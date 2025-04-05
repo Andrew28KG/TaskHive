@@ -1487,9 +1487,45 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             );
                             
                             if (time != null) {
-                              setState(() {
-                                endTime = time;
-                              });
+                              // Calculate if the new end time would make the event longer than 5 hours
+                              final startDateTime = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                startTime.hour,
+                                startTime.minute,
+                              );
+                              
+                              final proposedEndDateTime = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                time.hour,
+                                time.minute,
+                              );
+                              
+                              // Handle case where end time is earlier than start time (next day)
+                              final adjustedEndDateTime = proposedEndDateTime.isBefore(startDateTime)
+                                  ? proposedEndDateTime.add(const Duration(days: 1))
+                                  : proposedEndDateTime;
+                              
+                              final duration = adjustedEndDateTime.difference(startDateTime);
+                              
+                              if (duration.inHours > 5) {
+                                // Show error dialog if duration exceeds 5 hours
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Event duration cannot exceed 5 hours'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              } else {
+                                setState(() {
+                                  endTime = time;
+                                });
+                              }
                             }
                           },
                         ),
@@ -1615,6 +1651,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       endTime.minute,
                     );
                     
+                    // Adjust end time if it's earlier than start time (next day)
+                    final adjustedEndDateTime = endDateTime.isBefore(startDateTime)
+                        ? endDateTime.add(const Duration(days: 1))
+                        : endDateTime;
+                    
+                    // Verify event duration doesn't exceed 5 hours
+                    final duration = adjustedEndDateTime.difference(startDateTime);
+                    if (duration.inHours > 5) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Event duration cannot exceed 5 hours'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    
                     // Always include current user (host) in attendees
                     if (currentUserId != null && !selectedAttendees.contains(currentUserId)) {
                       selectedAttendees.add(currentUserId!);
@@ -1627,7 +1680,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       'title': titleController.text,
                       'description': descriptionController.text,
                       'startTime': Timestamp.fromDate(startDateTime),
-                      'endTime': Timestamp.fromDate(endDateTime),
+                      'endTime': Timestamp.fromDate(adjustedEndDateTime),
                       'teamId': _currentTeamId ?? '',
                       'createdBy': currentUserId ?? '',
                       'createdAt': FieldValue.serverTimestamp(),

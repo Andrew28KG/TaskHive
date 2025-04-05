@@ -285,11 +285,24 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             color: Colors.grey[600],
                           ),
                         ),
-                        Text(
-                          '${DateFormat('h:mm a').format(_event!.startTime)} - ${DateFormat('h:mm a').format(_event!.endTime)}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                        RichText(
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDarkMode ? Colors.white : Colors.black87,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: DateFormat('h:mm a').format(_event!.startTime),
+                              ),
+                              const TextSpan(
+                                text: ' - ',
+                              ),
+                              TextSpan(
+                                text: DateFormat('h:mm a').format(_event!.endTime),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -306,9 +319,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   
   Widget _buildEventDetails() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final duration = _event!.endTime.difference(_event!.startTime);
+    
+    // Calculate duration correctly
+    final startDateTime = _event!.startTime;
+    final endDateTime = _event!.endTime;
+    
+    // Handle case where end time is on the next day (earlier clock time than start)
+    final adjustedEndDateTime = endDateTime.isBefore(startDateTime) 
+        ? endDateTime.add(const Duration(days: 1)) 
+        : endDateTime;
+    
+    final duration = adjustedEndDateTime.difference(startDateTime);
     final hours = duration.inHours;
     final minutes = duration.inMinutes % 60;
+    
     String durationText = '';
     
     if (hours > 0) {

@@ -13,6 +13,7 @@ import 'package:taskhive/screens/all_hives_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:taskhive/screens/progress_screen.dart';
+import 'package:clipboard/clipboard.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String? teamId;
@@ -30,6 +31,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, List<BeeTask>> _tasksByHive = {};
   String? _currentTeamId;
   bool _isTeamCreator = false;
+  int _notificationCount = 0;
+  List<dynamic> _upcomingItems = [];
 
   @override
   void initState() {
@@ -40,6 +43,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       _loadTeamData();
     }
+    // Check for tasks/events immediately
+    Future.delayed(const Duration(seconds: 2), () {
+      _checkUpcomingDeadlines(showNotificationDialog: true);
+    });
   }
 
   @override
@@ -167,6 +174,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _tasksByHive = tasksByHive;
         _isLoading = false;
       });
+      
+      // Check for upcoming deadlines
+      _checkUpcomingDeadlines();
     } catch (e) {
       print('Error loading data: $e'); // Debug print
       setState(() => _isLoading = false);
@@ -195,6 +205,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('TaskHive'),
         actions: [
+          // Notification badge
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications),
+                onPressed: _showNotificationsDialog,
+              ),
+              if (_notificationCount > 0)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _notificationCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           if (_currentTeamId != null && _isTeamCreator) ...[
             IconButton(
               icon: const Icon(Icons.key),
@@ -1204,7 +1248,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         color: theme.colorScheme.primary,
                       ),
                       onPressed: () {
-                        // TODO: Implement copy to clipboard
+                        // Copy invite code to clipboard
+                        FlutterClipboard.copy(inviteCode).then((value) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Team code copied to clipboard'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        });
                       },
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -1580,5 +1632,237 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       label: label,
     );
+  }
+
+  // Modified to allow forcing notification dialog
+  Future<void> _checkUpcomingDeadlines({bool showNotificationDialog = false}) async {
+    if (_currentTeamId == null) return;
+    
+    try {
+      final now = DateTime.now();
+      // Use a more precise cutoff by setting the time to end of day
+      final twoDaysLater = DateTime(now.year, now.month, now.day + 2, 23, 59, 59);
+      
+      print('Checking for deadlines between $now and $twoDaysLater'); // Debug
+      
+      // Get tasks due within the next 2 days
+      final tasksSnapshot = await FirebaseFirestore.instance
+          .collection('tasks')
+          .where('teamId', isEqualTo: _currentTeamId)
+          .where('dueDate', isGreaterThanOrEqualTo: Timestamp.fromDate(now))
+          .where('dueDate', isLessThanOrEqualTo: Timestamp.fromDate(twoDaysLater))
+          .get();
+      
+      print('Found ${tasksSnapshot.docs.length} tasks with upcoming deadlines'); // Debug
+      
+      // Get events starting within the next 2 days
+      final eventsSnapshot = await FirebaseFirestore.instance
+          .collection('events')
+          .where('teamId', isEqualTo: _currentTeamId)
+          .where('startTime', isGreaterThanOrEqualTo: Timestamp.fromDate(now))
+          .where('startTime', isLessThanOrEqualTo: Timestamp.fromDate(twoDaysLater))
+          .get();
+      
+      print('Found ${eventsSnapshot.docs.length} events in the next 2 days'); // Debug
+      
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      
+      // Filter events where current user is an attendee or creator
+      final userEvents = eventsSnapshot.docs.where((doc) {
+        final data = doc.data();
+        final attendees = List<String>.from(data['attendees'] ?? []);
+        return attendees.contains(user.uid) || data['createdBy'] == user.uid;
+      }).toList();
+      
+      print('Events for current user: ${userEvents.length}'); // Debug
+      
+      // Filter tasks assigned to current user
+      final userTasks = tasksSnapshot.docs.where((doc) {
+        final data = doc.data();
+        return data['assignedTo'] == user.uid;
+      }).toList();
+      
+      print('Tasks for current user: ${userTasks.length}'); // Debug
+      
+      final upcomingItems = [
+        ...userEvents.map((doc) => {
+          'type': 'event',
+          'id': doc.id,
+          'title': doc.data()['title'],
+          'time': (doc.data()['startTime'] as Timestamp).toDate(),
+        }),
+        ...userTasks.map((doc) => {
+          'type': 'task',
+          'id': doc.id,
+          'title': doc.data()['title'],
+          'time': (doc.data()['dueDate'] as Timestamp).toDate(),
+        }),
+      ];
+      
+      // Debug each item
+      for (final item in upcomingItems) {
+        print('Upcoming item: ${item['title']} at ${item['time']} (${item['type']})');
+      }
+      
+      // Sort by time
+      upcomingItems.sort((a, b) => (a['time'] as DateTime).compareTo(b['time'] as DateTime));
+      
+      // Store previous count to check if new items were added
+      final previousCount = _notificationCount;
+      
+      setState(() {
+        _upcomingItems = upcomingItems;
+        _notificationCount = upcomingItems.length;
+      });
+      
+      // Show notification dialog if requested or if there are new notifications
+      if ((showNotificationDialog || previousCount < _notificationCount) && _notificationCount > 0) {
+        // Add slight delay to ensure the UI is ready
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            _showNotificationsDialog();
+          }
+        });
+      }
+    } catch (e) {
+      print('Error checking upcoming deadlines: $e');
+    }
+  }
+
+  void _showNotificationsDialog() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.notifications,
+                color: isDark ? Colors.deepOrange.shade300 : Colors.amber.shade700,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              const Text('Upcoming Deadlines'),
+            ],
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: _upcomingItems.isEmpty
+              ? Container(
+                  padding: const EdgeInsets.all(24),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline,
+                        size: 48,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No upcoming deadlines in the next 48 hours',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: _upcomingItems.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final item = _upcomingItems[index];
+                    final isEvent = item['type'] == 'event';
+                    final color = isEvent 
+                        ? isDark ? Colors.blue.shade300 : Colors.blue.shade700
+                        : isDark ? Colors.amber.shade300 : Colors.amber.shade700;
+                    
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isEvent ? Icons.event_note : Icons.task_alt,
+                          color: color,
+                        ),
+                      ),
+                      title: Text(
+                        item['title'],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${isEvent ? "Starts" : "Due"} ${_formatTimeRelative(item['time'])}',
+                            style: TextStyle(
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        if (isEvent) {
+                          Navigator.of(context).pushNamed(
+                            '/event',
+                            arguments: item['id'],
+                          );
+                        } else {
+                          Navigator.of(context).pushNamed(
+                            '/task',
+                            arguments: item['id'],
+                          );
+                        }
+                      },
+                    );
+                  },
+                ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  String _formatTimeRelative(DateTime time) {
+    final now = DateTime.now();
+    final difference = time.difference(now);
+    
+    if (difference.inHours < 1) {
+      return 'in ${difference.inMinutes} minutes';
+    } else if (difference.inHours < 24) {
+      return 'in ${difference.inHours} hours';
+    } else {
+      return DateFormat('MMM dd, HH:mm').format(time);
+    }
   }
 } 
