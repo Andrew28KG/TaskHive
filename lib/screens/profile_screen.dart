@@ -175,7 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 24),
                           _buildStatsSection(),
                           const SizedBox(height: 24),
-                          _buildActionButtons(),
+                          _buildActionSection(),
                         ],
                       ),
                     ),
@@ -241,31 +241,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.deepOrange.shade900.withOpacity(0.2)
-                          : Colors.orange.shade100,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.deepOrange.shade700
-                            : Colors.orange.shade300,
-                      ),
-                    ),
-                    child: Text(
-                      _userRole,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.deepOrange.shade300
-                            : Colors.orange.shade900,
-                      ),
                     ),
                   ),
                 ],
@@ -380,12 +355,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             'Settings',
             style: TextStyle(
@@ -407,22 +382,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 : Colors.orange.shade700,
           ),
         ),
-        const SizedBox(height: 12),
-        _buildActionButton(
-          'About TaskHive',
-          Icons.info_outline,
-          () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AboutScreen()),
-            );
-          },
-        ),
+        
+        // Add security section
         const SizedBox(height: 24),
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            'Account',
+            'Security',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -430,6 +396,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ),
+        _buildActionButton(
+          'Change Password',
+          Icons.lock,
+          _showChangePasswordDialog,
+        ),
+        
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            'About',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+        _buildActionButton(
+          'About TaskHive',
+          Icons.info,
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AboutScreen()),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
         _buildActionButton(
           'Sign Out',
           Icons.logout,
@@ -558,6 +553,192 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Add change password dialog
+  void _showChangePasswordDialog() {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    bool obscureCurrentPassword = true;
+    bool obscureNewPassword = true;
+    bool obscureConfirmPassword = true;
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Change Password'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: currentPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Current Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureCurrentPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              obscureCurrentPassword = !obscureCurrentPassword;
+                            });
+                          },
+                        ),
+                        border: const OutlineInputBorder(),
+                      ),
+                      obscureText: obscureCurrentPassword,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: newPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'New Password',
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureNewPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              obscureNewPassword = !obscureNewPassword;
+                            });
+                          },
+                        ),
+                        border: const OutlineInputBorder(),
+                      ),
+                      obscureText: obscureNewPassword,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: confirmPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm New Password',
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              obscureConfirmPassword = !obscureConfirmPassword;
+                            });
+                          },
+                        ),
+                        border: const OutlineInputBorder(),
+                      ),
+                      obscureText: obscureConfirmPassword,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          // Validate inputs
+                          if (currentPasswordController.text.isEmpty ||
+                              newPasswordController.text.isEmpty ||
+                              confirmPasswordController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('All fields are required')),
+                            );
+                            return;
+                          }
+
+                          if (newPasswordController.text.length < 6) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'New password must be at least 6 characters')),
+                            );
+                            return;
+                          }
+
+                          if (newPasswordController.text !=
+                              confirmPasswordController.text) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Passwords do not match')),
+                            );
+                            return;
+                          }
+
+                          // Update password
+                          setState(() {
+                            isLoading = true;
+                          });
+
+                          try {
+                            // Get current user
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user != null) {
+                              // Reauthenticate user first
+                              final credential = EmailAuthProvider.credential(
+                                email: user.email!,
+                                password: currentPasswordController.text,
+                              );
+
+                              await user.reauthenticateWithCredential(credential);
+
+                              // Change password
+                              await user.updatePassword(
+                                  newPasswordController.text);
+
+                              if (mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('Password updated successfully')),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            setState(() {
+                              isLoading = false;
+                            });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Error: ${e.toString()}')),
+                            );
+                          }
+                        },
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Update Password'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 } 

@@ -89,6 +89,8 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
     int todoTasks = 0;
     int overdueTasksCount = 0;
     int onTimeCompletions = 0;
+    int earlyCompletions = 0;
+    int tasksWithDueDate = 0;
     
     List<Duration> completionTimes = [];
     
@@ -108,17 +110,25 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
       // Check if the task has a due date
       if (task['dueDate'] != null) {
         final dueDate = task['dueDate'] as DateTime;
+        tasksWithDueDate++;
         
         // Check if the task is overdue and not completed
         if (task['status'] != 'done' && dueDate.isBefore(DateTime.now())) {
           overdueTasksCount++;
         }
         
-        // Calculate if completed on time
+        // Calculate if completed on time or early
         if (task['status'] == 'done' && task['completedAt'] != null) {
           final completedAt = task['completedAt'] as DateTime;
+          
           if (!completedAt.isAfter(dueDate)) {
             onTimeCompletions++;
+            
+            // Consider "early completion" if done at least 1 day before deadline
+            final daysEarly = dueDate.difference(completedAt).inDays;
+            if (daysEarly >= 1) {
+              earlyCompletions++;
+            }
           }
         }
       }
@@ -146,6 +156,71 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
     
     // Calculate on-time completion rate
     double onTimeCompletionRate = completedTasks > 0 ? (onTimeCompletions / completedTasks) * 100 : 0;
+
+    // Calculate performance rating (1-5 scale)
+    double performanceRating = 3.0; // Default to middle rating
+    
+    if (totalTasks > 0) {
+      // Start with a base rating of 3 stars
+      performanceRating = 3.0;
+      
+      // No overdue tasks is a big positive
+      if (overdueTasksCount == 0) {
+        performanceRating += 1.0;
+      } else {
+        // Penalize for overdue tasks, but not below 1 star
+        double overduePenalty = (overdueTasksCount / (tasksWithDueDate > 0 ? tasksWithDueDate : 1)) * 2.0;
+        performanceRating -= overduePenalty;
+      }
+      
+      // Early completions are a significant bonus
+      if (tasksWithDueDate > 0) {
+        double earlyBonus = (earlyCompletions / tasksWithDueDate) * 1.5;
+        performanceRating += earlyBonus;
+      }
+      
+      // High completion rate is a bonus
+      if (completionRate >= 75) {
+        performanceRating += 0.5;
+      }
+      
+      // Clamp the rating between 1-5 stars
+      performanceRating = performanceRating.clamp(1.0, 5.0);
+    }
+    
+    // Calculate efficiency score (1-100)
+    double efficiencyScore = 50.0; // Default to middle score
+    
+    if (totalTasks > 0) {
+      // Base efficiency on several factors
+      
+      // Early completion is a major positive factor for efficiency
+      double earlyFactor = tasksWithDueDate > 0 ? earlyCompletions / tasksWithDueDate : 0;
+      
+      // No overdue tasks indicates good efficiency
+      double overdueFactor = tasksWithDueDate > 0 ? 1.0 - (overdueTasksCount / tasksWithDueDate) : 0;
+      
+      // High completion percentage also factors in
+      double completionFactor = totalTasks > 0 ? completedTasks / totalTasks : 0;
+      
+      // Adjust for completion speed when available
+      double speedFactor = 0.5; // Default middle value
+      if (completionTimes.isNotEmpty) {
+        // Lower times = higher efficiency
+        speedFactor = 1.0 / (1 + averageCompletionTime / 5); // Normalized to favor less than a week
+      }
+      
+      // Calculate weighted score - prioritize no overdue tasks and early completion
+      efficiencyScore = (
+        earlyFactor * 35 +        // 35% weight for early completions
+        overdueFactor * 30 +      // 30% weight for having no overdue tasks
+        completionFactor * 20 +   // 20% weight for high completion percentage
+        speedFactor * 15          // 15% weight for speed of completion
+      ) * 100;
+      
+      // Ensure within 1-100 range
+      efficiencyScore = efficiencyScore.clamp(1.0, 100.0);
+    }
     
     _performanceStats = {
       'totalTasks': totalTasks,
@@ -153,9 +228,9 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
       'inProgressTasks': inProgressTasks,
       'todoTasks': todoTasks,
       'completionRate': completionRate,
-      'averageCompletionTime': averageCompletionTime,
+      'averageCompletionTime': efficiencyScore,
       'overdueTasksCount': overdueTasksCount,
-      'onTimeCompletionRate': onTimeCompletionRate,
+      'onTimeCompletionRate': performanceRating,
     };
   }
 
@@ -612,7 +687,7 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
                     child: _buildStatIndicator(
                       'Completion Rate',
                       '${_performanceStats['completionRate'].toStringAsFixed(1)}%',
-                      _getCompletionRateIcon(_performanceStats['completionRate']),
+                      Icons.sentiment_very_satisfied,
                       _getCompletionRateColor(_performanceStats['completionRate'], isDark),
                     ),
                   ),
@@ -620,7 +695,25 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
                   Expanded(
                     child: _buildStatIndicator(
                       'On-Time Rate',
-                      '${_performanceStats['onTimeCompletionRate'].toStringAsFixed(1)}%',
+                      _performanceStats['onTimeCompletionRate'] >= 5.0 
+                          ? '★★★★★' 
+                          : _performanceStats['onTimeCompletionRate'] >= 4.5
+                              ? '★★★★½'
+                              : _performanceStats['onTimeCompletionRate'] >= 4.0
+                                  ? '★★★★☆'
+                                  : _performanceStats['onTimeCompletionRate'] >= 3.5
+                                      ? '★★★½☆'
+                                      : _performanceStats['onTimeCompletionRate'] >= 3.0
+                                          ? '★★★☆☆'
+                                          : _performanceStats['onTimeCompletionRate'] >= 2.5
+                                              ? '★★½☆☆'
+                                              : _performanceStats['onTimeCompletionRate'] >= 2.0
+                                                  ? '★★☆☆☆'
+                                                  : _performanceStats['onTimeCompletionRate'] >= 1.5
+                                                      ? '★½☆☆☆'
+                                                      : _performanceStats['onTimeCompletionRate'] >= 1.0
+                                                          ? '★☆☆☆☆'
+                                                          : '☆☆☆☆☆',
                       _getOnTimeRateIcon(_performanceStats['onTimeCompletionRate']),
                       _getOnTimeRateColor(_performanceStats['onTimeCompletionRate'], isDark),
                     ),
@@ -635,8 +728,8 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
                   Expanded(
                     child: _buildStatIndicator(
                       'Avg. Completion',
-                      '${_performanceStats['averageCompletionTime'].toStringAsFixed(1)} days',
-                      Icons.timelapse,
+                      '${_performanceStats['averageCompletionTime'].toStringAsFixed(0)}/100',
+                      Icons.speed,
                       isDark ? Colors.blue[300]! : Colors.blue[600]!,
                     ),
                   ),
@@ -699,59 +792,62 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
   
   Widget _buildStatIndicator(String label, String value, IconData icon, Color color) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
+    return Tooltip(
+      message: _getTooltipText(label),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 14,
-                color: color,
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  _getShortLabel(label),
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 14,
+                  color: color,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    _getShortLabel(label),
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: color,
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
   
   String _getShortLabel(String label) {
     switch (label) {
-      case 'Completion Rate': return 'Completion';
-      case 'On-Time Rate': return 'On-Time';
-      case 'Avg. Completion': return 'Avg. Time';
+      case 'Completion Rate': return 'Completed Tasks';
+      case 'On-Time Rate': return 'Performance Rating';
+      case 'Avg. Completion': return 'Efficiency Score';
       default: return label;
     }
   }
@@ -771,14 +867,32 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
   }
   
   IconData _getOnTimeRateIcon(double rate) {
-    if (rate >= 75) return Icons.thumb_up;
-    if (rate >= 50) return Icons.thumbs_up_down;
-    return Icons.thumb_down;
+    if (rate >= 4.5) return Icons.stars;
+    if (rate >= 3.5) return Icons.star_rate;
+    if (rate >= 2.5) return Icons.star_half;
+    if (rate >= 1.5) return Icons.star_outline;
+    return Icons.star_border;
   }
   
   Color _getOnTimeRateColor(double rate, bool isDark) {
-    if (rate >= 75) return isDark ? Colors.green[300]! : Colors.green[600]!;
-    if (rate >= 50) return isDark ? Colors.amber[300]! : Colors.amber[600]!;
+    if (rate >= 4.0) return isDark ? Colors.green[300]! : Colors.green[600]!;
+    if (rate >= 3.0) return isDark ? Colors.lime[300]! : Colors.lime[600]!;
+    if (rate >= 2.0) return isDark ? Colors.amber[300]! : Colors.amber[600]!;
     return isDark ? Colors.red[300]! : Colors.red[600]!;
+  }
+
+  String _getTooltipText(String label) {
+    switch (label) {
+      case 'Completion Rate': 
+        return 'Percentage of total tasks that have been completed';
+      case 'On-Time Rate': 
+        return 'Performance rating (1-5 stars) based on meeting deadlines, with bonus for early completion';
+      case 'Avg. Completion': 
+        return 'Efficiency score based on task completion speed and resource utilization';
+      case 'Overdue': 
+        return 'Number of tasks past their due date that are not yet complete';
+      default: 
+        return label;
+    }
   }
 } 

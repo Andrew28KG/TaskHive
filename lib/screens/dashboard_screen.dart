@@ -1401,7 +1401,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ],
                             ),
                             subtitle: Text(
-                              isCreator ? 'Host' : 'Member',
+                              isCreator ? 'Admin' : 'Member',
                               style: TextStyle(
                                 color: isCreator ? Colors.amber[700] : Colors.grey[600],
                               ),

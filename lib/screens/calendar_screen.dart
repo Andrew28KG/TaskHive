@@ -1078,13 +1078,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ),
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              event.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                event.title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(width: 8),
             Container(
@@ -1113,49 +1117,55 @@ class _CalendarScreenState extends State<CalendarScreen> {
               const SizedBox(height: 4),
               Text(
                 event.description,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                ),
               ),
             ],
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 12,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[300]
-                      : Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${DateFormat('h:mm a').format(event.startTime)} - ${DateFormat('h:mm a').format(event.endTime)}',
-                  style: TextStyle(
-                    fontSize: 12,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.access_time,
+                    size: 12,
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.grey[300]
                         : Colors.grey[600],
                   ),
-                ),
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.people,
-                  size: 12,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[300]
-                      : Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${event.attendees.length} attendees',
-                  style: TextStyle(
-                    fontSize: 12,
+                  const SizedBox(width: 4),
+                  Text(
+                    '${DateFormat('h:mm a').format(event.startTime)} - ${DateFormat('h:mm a').format(event.endTime)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[300]
+                          : Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.people,
+                    size: 12,
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.grey[300]
                         : Colors.grey[600],
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Text(
+                    '${event.attendees.length} attendees',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[300]
+                          : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -1195,11 +1205,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ),
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              task.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                task.title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
             const SizedBox(width: 8),

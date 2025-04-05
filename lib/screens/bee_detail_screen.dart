@@ -609,15 +609,6 @@ Note: This is an automated notification. Please do not reply to this email.''';
                         borderRadius: BorderRadius.circular(12),
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.attach_file),
-                        onPressed: () {
-                          // Feature to be implemented later
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Attachments will be added in a future update')),
-                          );
-                        },
-                      ),
                     ),
                     maxLines: null,
                     minLines: 2,
