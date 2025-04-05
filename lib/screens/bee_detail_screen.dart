@@ -170,7 +170,7 @@ Note: This is an automated notification. Please do not reply to this email.''';
     if (_task == null) return const SizedBox();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 60),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -670,26 +670,31 @@ Note: This is an automated notification. Please do not reply to this email.''';
 
   Future<void> _updateTaskStatus(BeeStatus newStatus) async {
     try {
+      final updateData = {
+        'status': newStatus.toString().split('.').last,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      
+      // Add completedAt timestamp when status is set to done
+      if (newStatus == BeeStatus.done) {
+        updateData['completedAt'] = FieldValue.serverTimestamp();
+      } else if (_task!.status == BeeStatus.done && newStatus != BeeStatus.done) {
+        // If task was previously completed and now being changed to another status,
+        // remove the completedAt field
+        updateData['completedAt'] = FieldValue.delete();
+      }
+
       await FirebaseFirestore.instance
           .collection('tasks')
           .doc(widget.taskId)
-          .update({
-        'status': newStatus
-            .toString()
-            .split('.')
-            .last,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+          .update(updateData);
 
       _loadTask();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Task marked as ${newStatus
-                .toString()
-                .split('.')
-                .last}'),
+            content: Text('Task marked as ${newStatus.toString().split('.').last}'),
             duration: const Duration(seconds: 2),
           ),
         );

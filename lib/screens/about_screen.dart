@@ -5,61 +5,19 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('About TaskHive'),
+        elevation: 0,
+      ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black
-                  : Colors.amber.withOpacity(0.1),
-              Theme.of(context).scaffoldBackgroundColor,
-            ],
-          ),
-        ),
+        color: isDarkMode ? Colors.black : Colors.white,
         child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 60), // Add bottom padding to prevent navbar overlap
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).brightness == Brightness.dark
-                          ? Colors.deepOrange.shade900
-                          : Colors.amber.shade300,
-                      Theme.of(context).brightness == Brightness.dark
-                          ? Colors.deepOrange.shade700
-                          : Colors.amber.shade100,
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.black26
-                          : Colors.amber.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Text(
-                    'About TaskHive',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
@@ -99,20 +57,6 @@ class AboutScreen extends StatelessWidget {
                       Icons.favorite_outline,
                     ),
                     const SizedBox(height: 32),
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.arrow_back),
-                        label: const Text('Back to Profile'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.deepOrange.shade300
-                              : Colors.amber.shade700,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -124,6 +68,8 @@ class AboutScreen extends StatelessWidget {
   }
 
   Widget _buildSection(BuildContext context, String title, String content, IconData icon) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -138,7 +84,7 @@ class AboutScreen extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  color: Theme.of(context).brightness == Brightness.dark
+                  color: isDarkMode
                       ? Colors.deepOrange.shade300
                       : Colors.amber.shade700,
                   size: 24,
@@ -158,9 +104,7 @@ class AboutScreen extends StatelessWidget {
               content,
               style: TextStyle(
                 fontSize: 16,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[300]
-                    : Colors.grey[800],
+                color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
                 height: 1.5,
               ),
             ),
