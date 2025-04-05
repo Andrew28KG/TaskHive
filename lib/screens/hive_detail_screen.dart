@@ -6,7 +6,6 @@ import 'package:taskhive/models/bee_task.dart';
 import 'package:taskhive/screens/bee_detail_screen.dart';
 import 'package:taskhive/theme/app_theme.dart';
 import 'package:intl/intl.dart';
-import 'package:taskhive/utils/tutorial_manager.dart';
 
 class HiveDetailScreen extends StatefulWidget {
   final String projectId;
@@ -31,11 +30,6 @@ class _HiveDetailScreenState extends State<HiveDetailScreen> {
   void initState() {
     super.initState();
     _loadData();
-    
-    // Add this to show the hive detail tutorial after the widget is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showHiveDetailTutorial();
-    });
   }
 
   Future<void> _loadData() async {
@@ -104,16 +98,6 @@ class _HiveDetailScreenState extends State<HiveDetailScreen> {
       appBar: AppBar(
         title: Text(_project?.name ?? 'Hive Details'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            tooltip: 'View Tutorial',
-            onPressed: () {
-              TutorialManager.replayTutorial(
-                context, 
-                TutorialManager.keyHive
-              );
-            },
-          ),
           if (_isTeamCreator) ...[
             IconButton(
               icon: const Icon(Icons.edit),
@@ -1529,17 +1513,6 @@ class _HiveDetailScreenState extends State<HiveDetailScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _showHiveDetailTutorial() async {
-    if (!mounted) return;
-    
-    await TutorialManager.showTutorialDialog(
-      context,
-      TutorialManager.keyHive,
-      'Hive Workspace',
-      TutorialManager.getHiveDetailTutorialSteps(),
     );
   }
 } 

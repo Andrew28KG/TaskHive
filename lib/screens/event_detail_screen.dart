@@ -549,7 +549,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  'Host',
+                                  'Admin',
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -807,7 +807,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'You (host) will be included automatically',
+                                    'You (admin) will be included automatically',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.blue.shade700,

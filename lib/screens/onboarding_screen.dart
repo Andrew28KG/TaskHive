@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:taskhive/utils/tutorial_manager.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -30,15 +28,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       icon: Icons.trending_up,
     ),
   ];
-
-  Future<void> _finishOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasSeenOnboarding', true);
-    
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
-    }
-  }
 
   @override
   void dispose() {
@@ -79,7 +68,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const SizedBox(height: 30),
                 if (_currentPage == _pages.length - 1)
                   ElevatedButton(
-                    onPressed: _finishOnboarding,
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 50,
@@ -90,7 +81,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   )
                 else
                   TextButton(
-                    onPressed: _finishOnboarding,
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
                     child: const Text('Skip'),
                   ),
               ],

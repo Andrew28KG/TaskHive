@@ -21,7 +21,6 @@ import 'package:taskhive/screens/progress_detail_screen.dart';
 import 'package:taskhive/theme/app_theme.dart';
 import 'package:taskhive/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:taskhive/utils/tutorial_manager.dart';
 
 // Global variable to store the current user ID
 String? currentUserId;
@@ -51,9 +50,8 @@ void main() async {
     // For development: sign out when restarting the app to force login
     await FirebaseAuth.instance.signOut();
     
-    // Reset onboarding and tutorials for testing
+    // Reset onboarding for testing
     await prefs.setBool('hasSeenOnboarding', false);
-    await TutorialManager.resetAllTutorials();
     
     // Set current user ID if already logged in
     final user = FirebaseAuth.instance.currentUser;

@@ -13,7 +13,6 @@ import 'package:taskhive/screens/all_hives_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:taskhive/screens/progress_screen.dart';
-import 'package:taskhive/utils/tutorial_manager.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String? teamId;
@@ -31,7 +30,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, List<BeeTask>> _tasksByHive = {};
   String? _currentTeamId;
   bool _isTeamCreator = false;
-  String _teamName = '';
 
   @override
   void initState() {
@@ -42,12 +40,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       _loadTeamData();
     }
-    
-    // Show welcome tutorial and dashboard tutorial after the widget is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showWelcomeTutorial();
-      _showDashboardTutorial();
-    });
   }
 
   @override
@@ -203,12 +195,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('TaskHive'),
         actions: [
-          // Help/Tutorial button
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            tooltip: 'View Tutorial',
-            onPressed: () => _showTutorialMenu(context),
-          ),
           if (_currentTeamId != null && _isTeamCreator) ...[
             IconButton(
               icon: const Icon(Icons.key),
@@ -1593,123 +1579,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       label: label,
-    );
-  }
-
-  // Show welcome tutorial for first-time users
-  Future<void> _showWelcomeTutorial() async {
-    if (!mounted) return;
-    
-    await TutorialManager.showWelcomeTutorial(context);
-  }
-
-  // Add this method to show the dashboard tutorial
-  Future<void> _showDashboardTutorial() async {
-    if (!mounted) return;
-    
-    await TutorialManager.showTutorialDialog(
-      context,
-      TutorialManager.keyDashboard,
-      'Welcome to TaskHive',
-      TutorialManager.getDashboardTutorialSteps(),
-    );
-  }
-
-  // Add this method to show the tutorial menu
-  void _showTutorialMenu(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = isDark ? Colors.deepOrange.shade300 : Colors.orange.shade600;
-    
-    showDialog(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: Row(
-          children: [
-            Icon(Icons.lightbulb, color: iconColor),
-            const SizedBox(width: 10),
-            const Text('Tutorials'),
-          ],
-        ),
-        children: [
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(context);
-              TutorialManager.replayTutorial(context, TutorialManager.keyDashboard);
-            },
-            child: ListTile(
-              leading: Icon(Icons.dashboard, color: iconColor),
-              title: const Text('Dashboard Tutorial'),
-              subtitle: const Text('Learn about the main dashboard'),
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(context);
-              TutorialManager.replayTutorial(context, TutorialManager.keyTask);
-            },
-            child: ListTile(
-              leading: Icon(Icons.task, color: iconColor),
-              title: const Text('Task Tutorial'),
-              subtitle: const Text('Learn about task management'),
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(context);
-              TutorialManager.replayTutorial(context, TutorialManager.keyCalendar);
-            },
-            child: ListTile(
-              leading: Icon(Icons.calendar_today, color: iconColor),
-              title: const Text('Calendar Tutorial'),
-              subtitle: const Text('Learn about the calendar view'),
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(context);
-              TutorialManager.replayTutorial(context, TutorialManager.keyProgress);
-            },
-            child: ListTile(
-              leading: Icon(Icons.insights, color: iconColor),
-              title: const Text('Progress Tutorial'),
-              subtitle: const Text('Learn about progress tracking'),
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(context);
-              TutorialManager.replayTutorial(context, TutorialManager.keyFocus);
-            },
-            child: ListTile(
-              leading: Icon(Icons.timer, color: iconColor),
-              title: const Text('Focus Tutorial'),
-              subtitle: const Text('Learn about focus mode'),
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(context);
-              TutorialManager.replayTutorial(context, TutorialManager.keyProfile);
-            },
-            child: ListTile(
-              leading: Icon(Icons.person, color: iconColor),
-              title: const Text('Profile Tutorial'),
-              subtitle: const Text('Learn about profile settings'),
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(context);
-              TutorialManager.replayTutorial(context, TutorialManager.keyHive);
-            },
-            child: ListTile(
-              leading: Icon(Icons.grid_view, color: iconColor),
-              title: const Text('Hive Tutorial'),
-              subtitle: const Text('Learn about hive workspaces'),
-            ),
-          ),
-        ],
-      ),
     );
   }
 } 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:taskhive/utils/tutorial_manager.dart';
 
 class ProgressDetailScreen extends StatefulWidget {
   final String hiveId;
@@ -342,7 +341,12 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
                           ),
                         )
                       : ListView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.only(
+                            left: 16, 
+                            right: 16, 
+                            top: 16, 
+                            bottom: 40 // Increase bottom padding for the entire list
+                          ),
                           itemCount: _tasks.length + 1, // +1 for statistics card
                           itemBuilder: (context, index) {
                             // Statistics card at the top
@@ -356,7 +360,7 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
                             final isCompleted = task['status'] == 'done';
                             return Card(
                               elevation: 2,
-                              margin: const EdgeInsets.only(bottom: 16),
+                              margin: const EdgeInsets.only(bottom: 20),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -614,7 +618,7 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
   Widget _buildStatisticsCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 24.0),
       child: Card(
         elevation: 3,
         shape: RoundedRectangleBorder(
@@ -740,7 +744,12 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
                       'Overdue',
                       _performanceStats['overdueTasksCount'].toString(),
                       Icons.warning_amber,
-                      isDark ? Colors.red[300]! : Colors.red[600]!,
+                      _performanceStats['overdueTasksCount'] > 0 
+                          ? (isDark ? Colors.red[300]! : Colors.red[600]!)
+                          : (isDark ? Colors.green[300]! : Colors.green[600]!),
+                      containerColor: _performanceStats['overdueTasksCount'] > 0 
+                          ? (isDark ? Colors.red.withOpacity(0.15) : Colors.red.withOpacity(0.1))
+                          : null,
                     ),
                   ),
                 ],
@@ -789,14 +798,14 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
     );
   }
   
-  Widget _buildStatIndicator(String label, String value, IconData icon, Color color) {
+  Widget _buildStatIndicator(String label, String value, IconData icon, Color color, {Color? containerColor}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Tooltip(
       message: _getTooltipText(label),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: containerColor ?? color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: color.withOpacity(0.3),

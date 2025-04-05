@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:taskhive/main.dart';
 import 'package:taskhive/screens/about_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:taskhive/utils/tutorial_manager.dart';
+import 'package:taskhive/screens/tutorial_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -30,11 +30,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     print('ProfileScreen initState called');
     _loadUserData();
     _loadThemePreference();
-    
-    // Add this to show the profile tutorial after the widget is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showProfileTutorial();
-    });
   }
 
   Future<void> _loadThemePreference() async {
@@ -158,38 +153,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
-              child: Stack(
-                children: [
-                  const Center(
-                    child: Text(
-                      'Profile',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        color: Colors.white,
-                      ),
-                    ),
+              child: const Center(
+                child: Text(
+                  'Profile',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: Colors.white,
                   ),
-                  Positioned(
-                    right: 16,
-                    top: 0,
-                    bottom: 0,
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.help_outline,
-                        color: Colors.white,
-                      ),
-                      tooltip: 'View Tutorial',
-                      onPressed: () {
-                        TutorialManager.replayTutorial(
-                          context, 
-                          TutorialManager.keyProfile
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             Expanded(
@@ -409,6 +382,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ? Colors.deepOrange.shade300
                 : Colors.orange.shade700,
           ),
+        ),
+        
+        // Add tutorial option
+        _buildActionButton(
+          'App Tutorial',
+          Icons.help_outline,
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const TutorialScreen()),
+            );
+          },
         ),
         
         // Add security section
@@ -767,18 +752,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         );
       },
-    );
-  }
-
-  // Add this method to show the profile tutorial
-  Future<void> _showProfileTutorial() async {
-    if (!mounted) return;
-    
-    await TutorialManager.showTutorialDialog(
-      context,
-      TutorialManager.keyProfile,
-      'Profile & Settings',
-      TutorialManager.getProfileTutorialSteps(),
     );
   }
 } 
