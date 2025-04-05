@@ -4,11 +4,10 @@ Project UTS Pengembangan Aplikasi Mobile berbasis Flutter
 
 A task management Flutter application that helps teams organize and track their tasks efficiently.
 
-![TaskHive Logo](assets/images/logo.png)
 
 ## Author
 
-Developed by Andrew28KG
+Developed by Andrew Kurniawan Gianto - 2210101008
 
 ## Features
 
@@ -107,12 +106,6 @@ TaskHive takes security seriously:
 - Team data is protected with appropriate access controls
 
 **Note**: If you fork or clone this repository, you will need to set up your own Firebase project and add the required configuration files.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-© 2023 TaskHive. All rights reserved.
 
 ## Resources
 
