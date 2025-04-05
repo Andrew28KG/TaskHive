@@ -5,6 +5,7 @@ import 'package:taskhive/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:taskhive/main.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:taskhive/utils/tutorial_manager.dart';
 
 class BeeDetailScreen extends StatefulWidget {
   final String taskId;
@@ -26,6 +27,11 @@ class _BeeDetailScreenState extends State<BeeDetailScreen> {
   void initState() {
     super.initState();
     _loadTask();
+    
+    // Add this to show the task tutorial after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showTaskDetailTutorial();
+    });
   }
 
   @override
@@ -142,6 +148,16 @@ Note: This is an automated notification. Please do not reply to this email.''';
       appBar: AppBar(
         title: Text(_task?.title ?? 'Bee Details'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'View Tutorial',
+            onPressed: () {
+              TutorialManager.replayTutorial(
+                context, 
+                TutorialManager.keyTask
+              );
+            },
+          ),
           if (_isTeamCreator) ...[
             if (_assignedUserEmail != null)
               IconButton(
@@ -1126,6 +1142,18 @@ Note: This is an automated notification. Please do not reply to this email.''';
               ),
             ],
           ),
+    );
+  }
+
+  // Add this method to show the task detail tutorial
+  Future<void> _showTaskDetailTutorial() async {
+    if (!mounted) return;
+    
+    await TutorialManager.showTutorialDialog(
+      context,
+      TutorialManager.keyTask,
+      'Task Details',
+      TutorialManager.getTaskDetailsTutorialSteps(),
     );
   }
 }

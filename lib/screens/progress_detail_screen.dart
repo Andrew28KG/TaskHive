@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:taskhive/utils/tutorial_manager.dart';
 
 class ProgressDetailScreen extends StatefulWidget {
   final String hiveId;
@@ -739,9 +740,7 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
                       'Overdue',
                       _performanceStats['overdueTasksCount'].toString(),
                       Icons.warning_amber,
-                      _performanceStats['overdueTasksCount'] > 0 
-                          ? (isDark ? Colors.red[300]! : Colors.red[600]!)
-                          : (isDark ? Colors.green[300]! : Colors.green[600]!),
+                      isDark ? Colors.red[300]! : Colors.red[600]!,
                     ),
                   ),
                 ],

@@ -4,6 +4,7 @@ import 'package:taskhive/models/bee_task.dart';
 import 'package:taskhive/main.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
+import 'package:taskhive/utils/tutorial_manager.dart';
 
 class FocusScreen extends StatefulWidget {
   final String? teamId;
@@ -31,6 +32,11 @@ class _FocusScreenState extends State<FocusScreen> {
     _currentTeamId = widget.teamId;
     _loadTasks();
     _noteController.addListener(_autoSaveNotes);
+    
+    // Add this to show the focus mode tutorial after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showFocusTutorial();
+    });
   }
 
   @override
@@ -200,6 +206,9 @@ class _FocusScreenState extends State<FocusScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.black
+          : Colors.white,
       body: Container(
         color: Theme.of(context).brightness == Brightness.dark
             ? Colors.black
@@ -218,29 +227,51 @@ class _FocusScreenState extends State<FocusScreen> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.deepOrange.shade900
-                : Colors.orange.shade400,
+                ? Colors.purple.shade900
+                : Colors.purple.shade400,
             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
             boxShadow: [
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.black26
-                    : Colors.orange.withOpacity(0.3),
+                    : Colors.purple.withOpacity(0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: const Center(
-            child: Text(
-              'Focus Mode',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                color: Colors.white,
+          child: Stack(
+            children: [
+              const Center(
+                child: Text(
+                  'Focus Mode',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
+              Positioned(
+                right: 16,
+                top: 0,
+                bottom: 0,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.help_outline,
+                    color: Colors.white,
+                  ),
+                  tooltip: 'View Tutorial',
+                  onPressed: () {
+                    TutorialManager.replayTutorial(
+                      context, 
+                      TutorialManager.keyFocus
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
         Expanded(
@@ -724,6 +755,18 @@ class _FocusScreenState extends State<FocusScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Add this method to show the focus mode tutorial
+  Future<void> _showFocusTutorial() async {
+    if (!mounted) return;
+    
+    await TutorialManager.showTutorialDialog(
+      context,
+      TutorialManager.keyFocus,
+      'Focus Mode',
+      TutorialManager.getFocusTutorialSteps(),
     );
   }
 } 

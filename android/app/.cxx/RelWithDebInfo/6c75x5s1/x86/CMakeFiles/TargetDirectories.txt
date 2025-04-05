@@ -1,0 +1,2 @@
+C:/Users/andre/Documents/todo_app/android/app/.cxx/RelWithDebInfo/6c75x5s1/x86/CMakeFiles/edit_cache.dir
+C:/Users/andre/Documents/todo_app/android/app/.cxx/RelWithDebInfo/6c75x5s1/x86/CMakeFiles/rebuild_cache.dir

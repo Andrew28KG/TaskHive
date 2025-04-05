@@ -8,6 +8,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:taskhive/screens/bee_detail_screen.dart';
 import 'package:taskhive/screens/event_detail_screen.dart';
+import 'package:taskhive/utils/tutorial_manager.dart';
 
 class CalendarScreen extends StatefulWidget {
   final String? teamId;
@@ -33,6 +34,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _selectedDay = _focusedDay;
     _currentTeamId = widget.teamId;
     _loadData();
+    
+    // Add this to show the calendar tutorial after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showCalendarTutorial();
+    });
   }
 
   Future<void> _loadData() async {
@@ -243,34 +249,55 @@ class _CalendarScreenState extends State<CalendarScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Calendar Header
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.deepOrange.shade900
-                    : Colors.orange.shade400,
+                    ? Colors.indigo.shade900
+                    : Colors.blue.shade400,
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
                 boxShadow: [
                   BoxShadow(
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.black26
-                        : Colors.orange.withOpacity(0.2),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                        : Colors.blue.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: Center(
-                child: Text(
-                  'Calendar',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                    color: Colors.white,
+              child: Stack(
+                children: [
+                  const Center(
+                    child: Text(
+                      'Calendar',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned(
+                    right: 16,
+                    top: 0,
+                    bottom: 0,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.help_outline,
+                        color: Colors.white,
+                      ),
+                      tooltip: 'View Tutorial',
+                      onPressed: () {
+                        TutorialManager.replayTutorial(
+                          context, 
+                          TutorialManager.keyCalendar
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
             // Calendar
@@ -1656,6 +1683,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
           );
         },
       ),
+    );
+  }
+
+  // Add this method to show the calendar tutorial
+  Future<void> _showCalendarTutorial() async {
+    if (!mounted) return;
+    
+    await TutorialManager.showTutorialDialog(
+      context,
+      TutorialManager.keyCalendar,
+      'Calendar View',
+      TutorialManager.getCalendarTutorialSteps(),
     );
   }
 } 
