@@ -129,12 +129,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         appBar: AppBar(
           title: const Text('Event Details'),
           actions: [
-            if (_isCreator && !_isLoading)
+            if (_isCreator && !_isLoading) ...[
               IconButton(
                 icon: const Icon(Icons.edit),
                 onPressed: _editEvent,
                 tooltip: 'Edit Event',
               ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: _showDeleteConfirmation,
+                tooltip: 'Delete Event',
+                color: Colors.redAccent,
+              ),
+            ],
           ],
         ),
         body: _isLoading
@@ -461,42 +468,101 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      _event!.isOnlineMeeting ? Icons.link : Icons.place,
-                      size: 16,
-                      color: isDarkMode
-                          ? Colors.grey.shade300
-                          : Colors.grey.shade700,
+                    Row(
+                      children: [
+                        Icon(
+                          _event!.isOnlineMeeting ? Icons.link : Icons.place,
+                          size: 16,
+                          color: isDarkMode
+                              ? Colors.grey.shade300
+                              : Colors.grey.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _event!.isOnlineMeeting ? 'Meeting Link:' : 'Location:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode
+                                ? Colors.grey.shade300
+                                : Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _event!.isOnlineMeeting
-                          ? InkWell(
-                              onTap: () {
-                                final Uri uri = Uri.parse(_event!.location);
-                                if (uri.scheme.isNotEmpty) {
-                                  launchUrl(uri);
-                                }
-                              },
-                              child: Text(
-                                _event!.location,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: isDarkMode ? Colors.blue.shade300 : Colors.blue.shade700,
-                                  decoration: TextDecoration.underline,
+                    const SizedBox(height: 8),
+                    _event!.isOnlineMeeting
+                        ? InkWell(
+                            onTap: () => _launchUrl(_event!.location),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isDarkMode 
+                                    ? Colors.blue.shade900.withOpacity(0.2) 
+                                    : Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isDarkMode 
+                                      ? Colors.blue.shade700.withOpacity(0.5) 
+                                      : Colors.blue.shade200,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            )
-                          : Text(
-                              _event!.location,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _event!.location,
+                                      style: TextStyle(
+                                        color: isDarkMode ? Colors.blue.shade300 : Colors.blue.shade700,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.open_in_new,
+                                    size: 16,
+                                    color: isDarkMode ? Colors.blue.shade300 : Colors.blue.shade700,
+                                  ),
+                                ],
                               ),
                             ),
-                    ),
+                          )
+                        : Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isDarkMode 
+                                  ? Colors.orange.shade900.withOpacity(0.2) 
+                                  : Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isDarkMode 
+                                    ? Colors.orange.shade700.withOpacity(0.5) 
+                                    : Colors.orange.shade200,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(_event!.location),
+                                ),
+                                const SizedBox(width: 8),
+                                InkWell(
+                                  onTap: () => _openInMaps(_event!.location),
+                                  child: Icon(
+                                    Icons.map,
+                                    size: 16,
+                                    color: isDarkMode ? Colors.orange.shade300 : Colors.orange.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                   ],
                 ),
               ),
@@ -1241,5 +1307,109 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         },
       ),
     );
+  }
+
+  void _launchUrl(String url) async {
+    try {
+      final Uri uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not launch $url')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid URL: $url')),
+        );
+      }
+    }
+  }
+
+  void _openInMaps(String location) async {
+    try {
+      final String encodedLocation = Uri.encodeComponent(location);
+      final Uri googleMapsUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encodedLocation');
+      
+      if (await canLaunchUrl(googleMapsUri)) {
+        await launchUrl(googleMapsUri);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not open maps for: $location')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error opening location: $e')),
+        );
+      }
+    }
+  }
+
+  void _showDeleteConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Meeting'),
+        content: const Text(
+          'Are you sure you want to delete this meeting? This action cannot be undone.',
+          style: TextStyle(color: Colors.red),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => _deleteEvent(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Future<void> _deleteEvent() async {
+    try {
+      // Close the confirmation dialog
+      Navigator.pop(context);
+      
+      // Show loading
+      setState(() => _isLoading = true);
+      
+      // Delete the event from Firestore
+      await FirebaseFirestore.instance
+          .collection('events')
+          .doc(widget.eventId)
+          .delete();
+      
+      if (mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Meeting deleted successfully')),
+        );
+        
+        // Navigate back to previous screen
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting meeting: ${e.toString()}')),
+        );
+      }
+    }
   }
 } 

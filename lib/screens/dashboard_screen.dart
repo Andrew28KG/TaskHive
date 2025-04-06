@@ -17,6 +17,7 @@ import 'package:clipboard/clipboard.dart';
 import 'dart:async';
 import 'package:taskhive/screens/notification_list_screen.dart';
 import 'package:taskhive/utils/navigation_utils.dart';
+import 'package:taskhive/screens/chat_hub_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String? teamId;
@@ -207,6 +208,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       const CalendarScreen(),
       const ProgressScreen(),
+      const ChatHubScreen(),
       const FocusScreen(),
       const ProfileScreen(),
     ];
@@ -377,17 +379,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               _buildNavDestination(
                 context,
+                Icons.chat_outlined,
+                Icons.chat,
+                'Chat',
+                3,
+              ),
+              _buildNavDestination(
+                context,
                 Icons.timer_outlined,
                 Icons.timer,
                 'Focus',
-                3,
+                4,
               ),
               _buildNavDestination(
                 context,
                 Icons.person_outline,
                 Icons.person,
                 'Profile',
-                4,
+                5,
               ),
             ],
           ),
@@ -403,49 +412,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildDashboard() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatCard(
-                    'Active Hives',
-                    _projects.length.toString(),
-                    Icons.hive,
-                    Colors.amber,
-                  ),
-                  _buildStatCard(
-                    'Busy Bees',
-                    _tasks.where((t) => t.status == BeeStatus.inProgress).length.toString(),
-                    Icons.local_florist,
-                    Colors.green,
-                  ),
-                  _buildStatCard(
-                    'To Do',
-                    _tasks.where((t) => t.status == BeeStatus.todo).length.toString(),
-                    Icons.emoji_nature,
-                    Colors.orange,
-                  ),
-                ],
+    // Get current user's name
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final userName = currentUser?.displayName ?? 'User';
+    
+    // Get user's name from Firestore
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUserId)
+          .get(),
+      builder: (context, snapshot) {
+        // Get name from Firestore or fallback to display name
+        String name = 'User';
+        if (snapshot.hasData && snapshot.data != null) {
+          final userData = snapshot.data!.data() as Map<String, dynamic>?;
+          name = userData?['name'] ?? currentUser?.displayName ?? 'User';
+        }
+        
+        // Get current date
+        final now = DateTime.now();
+        final dateStr = DateFormat('EEEE, MMMM d').format(now);
+        
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Hello User and Date
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hello, $name!',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      dateStr,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(height: 24),
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatCard(
+                        'Active Hives',
+                        _projects.length.toString(),
+                        Icons.hive,
+                        Colors.amber,
+                      ),
+                      _buildStatCard(
+                        'Busy Bees',
+                        _tasks.where((t) => t.status == BeeStatus.inProgress).length.toString(),
+                        Icons.local_florist,
+                        Colors.green,
+                      ),
+                      _buildStatCard(
+                        'To Do',
+                        _tasks.where((t) => t.status == BeeStatus.todo).length.toString(),
+                        Icons.emoji_nature,
+                        Colors.orange,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildProjectsSection(),
+              const SizedBox(height: 24),
+              _buildTeamMembersSection(),
+            ],
           ),
-          const SizedBox(height: 24),
-          _buildProjectsSection(),
-          const SizedBox(height: 24),
-          _buildTeamMembersSection(),
-        ],
-      ),
+        );
+      }
     );
   }
 

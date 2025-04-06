@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 import 'package:taskhive/utils/navigation_utils.dart';
+import 'package:taskhive/screens/discussion_screen.dart';
 
 class BeeDetailScreen extends StatefulWidget {
   final String taskId;
@@ -644,13 +645,13 @@ Note: This is an automated notification. Please do not reply to this email.''';
             Row(
               children: [
                 Icon(
-                  Icons.chat_bubble_outline,
-                  color: Colors.green[700],
+                  Icons.lightbulb_outline,
+                  color: Colors.amber[700],
                   size: 24,
                 ),
                 const SizedBox(width: 8),
                 const Text(
-                  'Bee Chat',
+                  'Ideas & Discussion',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -659,86 +660,65 @@ Note: This is an automated notification. Please do not reply to this email.''';
               ],
             ),
             const SizedBox(height: 16),
-            if (_task!.comments.isEmpty)
-              Center(
-                child: Column(
+            Text(
+              'Share ideas, suggestions, feedback or brainstorm solutions with your team members.',
+              style: TextStyle(
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DiscussionScreen(
+                      taskId: _task!.id,
+                      taskTitle: _task!.title,
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.amber.shade300,
+                      Colors.orange.shade400,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.amber.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.chat,
-                      size: 48,
-                      color: Colors.grey[300],
+                      Icons.forum_outlined,
+                      color: Colors.white,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(width: 8),
                     Text(
-                      'No comments yet',
+                      'Open Discussion Board',
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ],
                 ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _task!.comments.length,
-                itemBuilder: (context, index) {
-                  final comment = _task!.comments[index];
-                  return ListTile(
-                    leading: const CircleAvatar(
-                      child: Icon(Icons.person),
-                    ),
-                    title: Text(comment.userName),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(comment.text),
-                        Text(
-                          DateFormat('MMM d, y - h:mm a').format(
-                              comment.createdAt),
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
               ),
-            const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _commentController,
-                    decoration: InputDecoration(
-                      hintText: 'Add a comment...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    maxLines: null,
-                    minLines: 2,
-                    textInputAction: TextInputAction.newline,
-                    onSubmitted: (_) => _addComment(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _addComment,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  child: const Text('Send'),
-                ),
-              ],
             ),
           ],
         ),

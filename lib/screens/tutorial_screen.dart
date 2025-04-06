@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class TutorialScreen extends StatelessWidget {
   const TutorialScreen({super.key});
@@ -7,95 +8,148 @@ class TutorialScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('App Tutorial'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 60),
-        children: [
-          _buildTutorialHeader(context),
-          const SizedBox(height: 24),
-          _buildTutorialSection(
-            context,
-            'Dashboard',
-            Icons.dashboard,
-            'Your main workspace where you can view all your teams and tasks.',
-            [
-              'View assigned tasks and events',
-              'Add new tasks or events (admin only)',
-              'Join or create teams',
-              'Edit task details and track progress',
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildTutorialSection(
-            context,
-            'Calendar',
-            Icons.calendar_today,
-            'Manage your schedule and deadlines in one place.',
-            [
-              'View tasks and events by date',
-              'See all items scheduled for a specific day',
-              'Create new events (admin only)',
-              'Manage attendees for meetings',
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildTutorialSection(
-            context,
-            'Progress',
-            Icons.analytics,
-            'Track your team\'s productivity and task completion.',
-            [
-              'View overall completion rate',
-              'Check performance rating (1-5 stars)',
-              'Monitor efficiency score',
-              'Track overdue tasks',
-              'See task status distribution',
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildTutorialSection(
-            context,
-            'Task Details',
-            Icons.task_alt,
-            'Comprehensive view of each task\'s information.',
-            [
-              'Update task status',
-              'Add comments through Bee Chat',
-              'View assignment details',
-              'Track due dates',
-              'Edit task details (admin only)',
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildTutorialSection(
-            context,
-            'Event Details',
-            Icons.event,
-            'Manage and coordinate meetings and events.',
-            [
-              'View event timing and duration',
-              'See full attendee list',
-              'Check event description',
-              'Edit event details (admin only)',
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildTutorialSection(
-            context,
-            'Profile',
-            Icons.person,
-            'Personalize your experience and manage account.',
-            [
-              'Toggle dark mode',
-              'Change password',
-              'View task statistics',
-              'Sign out',
-            ],
-          ),
-        ],
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('App Tutorial'),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 60),
+          children: [
+            _buildTutorialHeader(context),
+            const SizedBox(height: 24),
+            _buildTutorialSection(
+              context,
+              'Dashboard',
+              Icons.dashboard,
+              'Your main workspace where you can view all your teams and tasks.',
+              [
+                'View assigned tasks and events',
+                'Add new tasks or events (admin only)',
+                'Join or create teams',
+                'Edit task details and track progress',
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildTutorialSection(
+              context,
+              'Calendar',
+              Icons.calendar_today,
+              'Manage your schedule and deadlines in one place.',
+              [
+                'View tasks and events by date',
+                'See all items scheduled for a specific day',
+                'Create new meetings with online/offline options',
+                'Manage attendees for meetings',
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildTutorialSection(
+              context,
+              'Progress',
+              Icons.analytics,
+              'Track your team\'s productivity and task completion.',
+              [
+                'View overall completion rate',
+                'Check performance rating (1-5 stars)',
+                'Monitor efficiency score',
+                'Track overdue tasks',
+                'See task status distribution',
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildTutorialSection(
+              context,
+              'Discussions',
+              Icons.forum,
+              'Stay connected with your team through dedicated chat channels.',
+              [
+                'Access the Team Chat for team-wide discussions',
+                'Chat about specific tasks in task-specific channels',
+                'Pin important messages for easy reference',
+                'React to messages with likes',
+                'Organize chats by hives/projects',
+                'Pin frequently used chats for quick access',
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildTutorialSection(
+              context,
+              'Task Details',
+              Icons.task_alt,
+              'Comprehensive view of each task\'s information.',
+              [
+                'Update task status',
+                'Add comments through Bee Chat',
+                'View assignment details',
+                'Track due dates',
+                'Edit task details (admin only)',
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildTutorialSection(
+              context,
+              'Meeting Details',
+              Icons.event,
+              'Manage and coordinate online or in-person meetings.',
+              [
+                'View meeting timing and duration',
+                'See full attendee list',
+                'Check if meeting is online or in-person',
+                'Access meeting location or video call link',
+                'Edit meeting details (admin only)',
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildTutorialSection(
+              context,
+              'Focus Mode',
+              Icons.center_focus_strong,
+              'Boost productivity by focusing on one task at a time.',
+              [
+                'Select a task to focus on',
+                'Track time spent on tasks',
+                'Set work/break intervals',
+                'Receive reminders to stay on track',
+                'Update task progress directly',
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildTutorialSection(
+              context,
+              'Profile',
+              Icons.person,
+              'Personalize your experience and manage account.',
+              [
+                'Toggle dark mode',
+                'Change password',
+                'View task statistics',
+                'Sign out',
+                'Manage notification preferences',
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildTutorialSection(
+              context,
+              'Navigation',
+              Icons.arrow_back,
+              'Easily navigate through the app with improved back button handling.',
+              [
+                'Press back to return to previous screen',
+                'Back button returns to main dashboard from deep screens',
+                'App maintains your state instead of exiting unexpectedly',
+                'Confirmation dialogs for unsaved changes',
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -154,7 +208,7 @@ class TutorialScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              'TaskHive helps you organize tasks, schedule events, and collaborate with your team efficiently. This guide will help you understand each feature and make the most of your experience.',
+              'TaskHive helps you organize tasks, schedule meetings, and collaborate with your team efficiently. This guide will help you understand each feature and make the most of your experience.',
               style: TextStyle(
                 fontSize: 16,
                 height: 1.5,

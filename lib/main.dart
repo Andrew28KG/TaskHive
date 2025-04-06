@@ -18,6 +18,8 @@ import 'package:taskhive/screens/collaboration_screen.dart';
 import 'package:taskhive/screens/analytics_screen.dart';
 import 'package:taskhive/screens/progress_screen.dart';
 import 'package:taskhive/screens/progress_detail_screen.dart';
+import 'package:taskhive/screens/discussion_screen.dart';
+import 'package:taskhive/screens/chat_hub_screen.dart';
 import 'package:taskhive/theme/app_theme.dart';
 import 'package:taskhive/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -195,6 +197,7 @@ class _TaskHiveAppState extends State<TaskHiveApp> {
         '/collaboration': (context) => const CollaborationScreen(),
         '/analytics': (context) => const AnalyticsScreen(),
         '/notifications': (context) => const NotificationListScreen(),
+        '/chat-hub': (context) => const ChatHubScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/project') {
@@ -225,6 +228,16 @@ class _TaskHiveAppState extends State<TaskHiveApp> {
               hiveId: args['hiveId'],
               hiveName: args['hiveName'],
               isTeamCreator: args['isTeamCreator'],
+            ),
+          );
+        }
+        
+        if (settings.name == '/discussion') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => DiscussionScreen(
+              taskId: args['taskId'],
+              taskTitle: args['taskTitle'],
             ),
           );
         }

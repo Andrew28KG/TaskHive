@@ -20,6 +20,6 @@
   },
   "firestore": {
     "rules": "firestore.rules",
-    "indexes": "y"
+    "indexes": "firestore.indexes.json"
   }
 }
