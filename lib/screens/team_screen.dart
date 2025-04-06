@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:taskhive/main.dart';
 import 'dart:math';
+import 'package:clipboard/clipboard.dart';
 
 class TeamScreen extends StatefulWidget {
   const TeamScreen({super.key});
@@ -193,7 +194,15 @@ class _TeamScreenState extends State<TeamScreen> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         onPressed: () {
-                          // TODO: Implement copy to clipboard
+                          // Copy invite code to clipboard
+                          FlutterClipboard.copy(inviteCode).then((value) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Team code copied to clipboard'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          });
                         },
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),

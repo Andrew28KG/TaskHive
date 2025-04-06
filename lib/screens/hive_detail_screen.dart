@@ -126,7 +126,7 @@ class _HiveDetailScreenState extends State<HiveDetailScreen> {
     if (_project == null) return const SizedBox();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

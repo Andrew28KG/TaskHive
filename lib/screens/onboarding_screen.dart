@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -35,6 +36,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  // Save that user has seen onboarding
+  Future<void> _completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasSeenOnboarding', true);
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,9 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const SizedBox(height: 30),
                 if (_currentPage == _pages.length - 1)
                   ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
+                    onPressed: _completeOnboarding,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 50,
@@ -81,9 +88,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   )
                 else
                   TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
+                    onPressed: _completeOnboarding,
                     child: const Text('Skip'),
                   ),
               ],

@@ -5,6 +5,8 @@ import 'package:taskhive/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:taskhive/main.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 
 class BeeDetailScreen extends StatefulWidget {
   final String taskId;
@@ -21,6 +23,7 @@ class _BeeDetailScreenState extends State<BeeDetailScreen> {
   String? _assignedUserEmail;
   final _commentController = TextEditingController();
   bool _isTeamCreator = false;
+  bool _isSendingNotification = false;
 
   @override
   void initState() {
@@ -82,27 +85,83 @@ class _BeeDetailScreenState extends State<BeeDetailScreen> {
     }
   }
 
-  Future<void> _sendTaskEmail() async {
-    if (_task == null || _assignedUserEmail == null) return;
+  Future<void> _sendTaskNotification() async {
+    if (_assignedUserEmail == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not find email address for assigned user'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
 
-    final subject = '[TaskHive] Task Assignment: ${_task!.title}';
-    final body = '''Hi there,
+    setState(() => _isSendingNotification = true);
 
-A task has been assigned to you in TaskHive.
+    try {
+      // Instead of querying with multiple conditions that require a composite index,
+      // we'll fetch notifications for this task and check the timestamp on the client side
+      final notificationsSnapshot = await FirebaseFirestore.instance
+          .collection('notifications')
+          .where('taskId', isEqualTo: _task!.id)
+          .get();
+      
+      // Check if any notification was sent in the last 24 hours
+      final oneDayAgo = DateTime.now().subtract(const Duration(days: 1));
+      final recentNotification = notificationsSnapshot.docs.any((doc) {
+        final createdAt = (doc.data()['createdAt'] as Timestamp?)?.toDate();
+        return createdAt != null && createdAt.isAfter(oneDayAgo);
+      });
+      
+      if (recentNotification) {
+        // A notification was already sent in the last 24 hours
+        setState(() => _isSendingNotification = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('A notification for this task was already sent today. Limited to once per day.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+      
+      // 1. Create in-app notification first
+      print('Creating notification for user ID: ${_task!.assignedTo}');
+      final notificationData = {
+        'userId': _task!.assignedTo,
+        'title': 'Task Reminder: ${_task!.title}',
+        'message': _task!.dueDate != null 
+          ? 'Due on ${DateFormat('MMM d, y').format(_task!.dueDate!)}' 
+          : 'This task requires your attention',
+        'taskId': _task!.id,
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'priority': _task!.priority.toString().split('.').last,
+      };
+      print('Notification data: $notificationData');
+      
+      final notificationRef = await FirebaseFirestore.instance
+          .collection('notifications')
+          .add(notificationData);
+      
+      print('Created notification with ID: ${notificationRef.id}');
+      
+      // 2. Prepare email content
+      final subject = 'TaskHive Notification: Task Update - ${_task!.title}';
+      final dueDateInfo = _task!.dueDate != null 
+        ? 'Due Date: ${DateFormat('EEEE, MMMM d, y').format(_task!.dueDate!)}\n' 
+        : '';
+        
+      final body = '''Dear team member,
 
-Task Details:
--------------
-Title: ${_task!.title}
-Description: ${_task!.description}
-Priority: ${_getPriorityText()}
-${_task!.dueDate != null ? 'Due Date: ${DateFormat('EEEE, MMMM d, y').format(
-        _task!.dueDate!)}\n' : ''}Status: ${_task!
-        .status
-        .toString()
-        .split('.')
-        .last
-        .toUpperCase()}
+You have been assigned a task in TaskHive that requires your attention.
 
+Task: ${_task!.title}
+Priority: ${_task!.priority.toString().split('.').last.toUpperCase()}
+Status: ${_task!.status.toString().split('.').last.toUpperCase()}
+$dueDateInfo
 Please review this task and update its status as you make progress.
 You can access the task directly through the TaskHive app.
 
@@ -111,24 +170,57 @@ TaskHive Team
 
 Note: This is an automated notification. Please do not reply to this email.''';
 
-    try {
-      final emailUri = Uri(
-        scheme: 'mailto',
-        path: _assignedUserEmail,
-        query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri
-            .encodeComponent(body)}',
-      );
+      // 3. Try to directly send email with the mailer package
+      try {
+        // Get the current user's email to use as the sender
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUserId)
+            .get();
+        final senderEmail = userDoc.data()?['email'];
+        
+        if (senderEmail != null) {
+          // These would typically be stored securely and not hardcoded
+          final smtpServer = gmail(senderEmail, 'app-password-here');
+          
+          final message = Message()
+            ..from = Address(senderEmail, 'TaskHive')
+            ..recipients.add(_assignedUserEmail!)
+            ..subject = subject
+            ..text = body;
+          
+          await send(message, smtpServer);
+        } else {
+          throw Exception('Sender email not found');
+        }
+      } catch (e) {
+        print('Error sending direct email: $e');
+        // Fallback to email URI method
+        final emailUri = Uri(
+          scheme: 'mailto',
+          path: _assignedUserEmail,
+          query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+        );
 
-      if (!await launchUrl(emailUri)) {
-        throw Exception('Could not launch email client');
+        await launchUrl(emailUri);
       }
-    } catch (e) {
-      print('Error launching email: $e');
+
       if (mounted) {
+        setState(() => _isSendingNotification = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-                'Could not open email. Please check if you have an email app installed.'),
+            content: Text('Notification sent successfully!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error sending notification: $e');
+      if (mounted) {
+        setState(() => _isSendingNotification = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not send notification. Please try again.'),
             duration: Duration(seconds: 3),
           ),
         );
@@ -145,9 +237,18 @@ Note: This is an automated notification. Please do not reply to this email.''';
           if (_isTeamCreator) ...[
             if (_assignedUserEmail != null)
               IconButton(
-                icon: const Icon(Icons.notifications_active),
-                onPressed: _sendTaskEmail,
-                tooltip: 'Send Task Notification',
+                icon: _isSendingNotification 
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Icon(Icons.notifications_active),
+                onPressed: _isSendingNotification ? null : _sendTaskNotification,
+                tooltip: 'Send Task Reminder',
               ),
             IconButton(
               icon: const Icon(Icons.edit),

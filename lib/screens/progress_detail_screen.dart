@@ -736,6 +736,7 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
                       '${_performanceStats['averageCompletionTime'].toStringAsFixed(0)}/100',
                       Icons.speed,
                       isDark ? Colors.blue[300]! : Colors.blue[600]!,
+                      containerColor: isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.withOpacity(0.1),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -749,7 +750,7 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
                           : (isDark ? Colors.green[300]! : Colors.green[600]!),
                       containerColor: _performanceStats['overdueTasksCount'] > 0 
                           ? (isDark ? Colors.red.withOpacity(0.15) : Colors.red.withOpacity(0.1))
-                          : null,
+                          : (isDark ? Colors.green.withOpacity(0.15) : Colors.green.withOpacity(0.1)),
                     ),
                   ),
                 ],
@@ -869,9 +870,9 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
   
   Color _getCompletionRateColor(double rate, bool isDark) {
     if (rate >= 75) return isDark ? Colors.green[300]! : Colors.green[600]!;
-    if (rate >= 50) return isDark ? Colors.lime[300]! : Colors.lime[600]!;
-    if (rate >= 25) return isDark ? Colors.amber[300]! : Colors.amber[600]!;
-    return isDark ? Colors.red[300]! : Colors.red[600]!;
+    if (rate >= 50) return isDark ? Colors.green[300]! : Colors.green[600]!;
+    if (rate >= 25) return isDark ? Colors.green[300]! : Colors.green[600]!;
+    return isDark ? Colors.green[300]! : Colors.green[600]!;
   }
   
   IconData _getOnTimeRateIcon(double rate) {

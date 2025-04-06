@@ -474,10 +474,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ],
         ),
       ),
-      floatingActionButton: _isTeamCreator ? FloatingActionButton(
+      floatingActionButton: _isTeamCreator ? FloatingActionButton.extended(
         onPressed: _showCreateEventDialog,
-        child: const Icon(Icons.add),
-        tooltip: 'Add Event',
+        label: const Text('Add Meeting'),
+        icon: const Icon(Icons.add),
+        tooltip: 'Add Meeting',
       ) : null,
     );
   }
@@ -1070,7 +1071,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            Icons.event,
+            event.isOnlineMeeting ? Icons.video_call : Icons.event,
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.deepOrange.shade300
                 : Colors.orange.shade700,
@@ -1099,8 +1100,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     : Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text(
-                'Event',
+              child: Text(
+                event.isOnlineMeeting ? 'Online' : 'Offline',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -1122,6 +1123,30 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 style: TextStyle(
                   fontSize: 12,
                 ),
+              ),
+            ],
+            if (event.location.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    event.isOnlineMeeting ? Icons.link : Icons.location_on,
+                    size: 12,
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      event.location,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
             const SizedBox(height: 8),
@@ -1336,6 +1361,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Future<void> _showCreateEventDialog() async {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
+    final locationController = TextEditingController();
+    final linkController = TextEditingController();
     
     DateTime selectedDate = DateTime.now();
     TimeOfDay startTime = TimeOfDay.now();
@@ -1346,6 +1373,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     
     List<String> selectedAttendees = [];
     List<Map<String, dynamic>> teamMembers = [];
+    bool isOnlineMeeting = true;
     
     // Load team members
     try {
@@ -1397,7 +1425,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: const Text('Create Event'),
+            title: const Text('Create Meeting'),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1406,7 +1434,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   TextField(
                     controller: titleController,
                     decoration: const InputDecoration(
-                      labelText: 'Event Title',
+                      labelText: 'Meeting Title',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -1419,6 +1447,144 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  // Meeting Type - Online or Offline
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Meeting Type',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade200,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    isOnlineMeeting = true;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: isOnlineMeeting
+                                        ? Theme.of(context).brightness == Brightness.dark
+                                            ? Colors.blue.shade800
+                                            : Colors.blue.shade100
+                                        : Colors.transparent,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.videocam,
+                                        color: isOnlineMeeting
+                                            ? Theme.of(context).brightness == Brightness.dark
+                                                ? Colors.white
+                                                : Colors.blue.shade800
+                                            : Colors.grey,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Online',
+                                        style: TextStyle(
+                                          fontWeight: isOnlineMeeting ? FontWeight.bold : FontWeight.normal,
+                                          color: isOnlineMeeting
+                                              ? Theme.of(context).brightness == Brightness.dark
+                                                  ? Colors.white
+                                                  : Colors.blue.shade800
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    isOnlineMeeting = false;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: !isOnlineMeeting
+                                        ? Theme.of(context).brightness == Brightness.dark
+                                            ? Colors.orange.shade800
+                                            : Colors.orange.shade100
+                                        : Colors.transparent,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.location_on,
+                                        color: !isOnlineMeeting
+                                            ? Theme.of(context).brightness == Brightness.dark
+                                                ? Colors.white
+                                                : Colors.orange.shade800
+                                            : Colors.grey,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Offline',
+                                        style: TextStyle(
+                                          fontWeight: !isOnlineMeeting ? FontWeight.bold : FontWeight.normal,
+                                          color: !isOnlineMeeting
+                                              ? Theme.of(context).brightness == Brightness.dark
+                                                  ? Colors.white
+                                                  : Colors.orange.shade800
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Conditional field based on meeting type
+                  if (isOnlineMeeting)
+                    TextField(
+                      controller: linkController,
+                      decoration: const InputDecoration(
+                        labelText: 'Meeting Link',
+                        hintText: 'https://...',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.link),
+                      ),
+                    )
+                  else
+                    TextField(
+                      controller: locationController,
+                      decoration: const InputDecoration(
+                        labelText: 'Meeting Location',
+                        hintText: 'Enter physical location',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.location_on),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   ListTile(
                     title: const Text('Date'),
@@ -1516,7 +1682,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Event duration cannot exceed 5 hours'),
+                                      content: Text('Meeting duration cannot exceed 5 hours'),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
@@ -1628,7 +1794,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 onPressed: () async {
                   if (titleController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter an event title')),
+                      const SnackBar(content: Text('Please enter a meeting title')),
                     );
                     return;
                   }
@@ -1661,7 +1827,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     if (duration.inHours > 5) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Event duration cannot exceed 5 hours'),
+                          content: Text('Meeting duration cannot exceed 5 hours'),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -1685,6 +1851,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       'createdBy': currentUserId ?? '',
                       'createdAt': FieldValue.serverTimestamp(),
                       'attendees': selectedAttendees,
+                      'isOnlineMeeting': isOnlineMeeting,
+                      'location': isOnlineMeeting ? linkController.text : locationController.text,
                     });
                     
                     if (mounted) {
@@ -1692,13 +1860,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       _loadData();
                       
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Event created successfully')),
+                        const SnackBar(content: Text('Meeting created successfully')),
                       );
                     }
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error creating event: ${e.toString()}')),
+                        SnackBar(content: Text('Error creating meeting: ${e.toString()}')),
                       );
                     }
                   }

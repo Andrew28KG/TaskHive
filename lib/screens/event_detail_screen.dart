@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:taskhive/main.dart';
 import 'package:taskhive/models/event.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final String eventId;
@@ -363,7 +364,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ),
                 const SizedBox(width: 8),
                 const Text(
-                  'Event Details',
+                  'Meeting Details',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -373,7 +374,41 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             const SizedBox(height: 16),
             
+            // Meeting type info
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _event!.isOnlineMeeting
+                    ? (isDarkMode ? Colors.blue.shade900.withOpacity(0.3) : Colors.blue.shade50)
+                    : (isDarkMode ? Colors.orange.shade900.withOpacity(0.3) : Colors.orange.shade50),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _event!.isOnlineMeeting ? Icons.videocam : Icons.location_on,
+                    size: 16,
+                    color: _event!.isOnlineMeeting
+                        ? (isDarkMode ? Colors.blue.shade300 : Colors.blue.shade700)
+                        : (isDarkMode ? Colors.orange.shade300 : Colors.orange.shade700),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _event!.isOnlineMeeting ? 'Online Meeting' : 'In-Person Meeting',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _event!.isOnlineMeeting
+                          ? (isDarkMode ? Colors.blue.shade300 : Colors.blue.shade700)
+                          : (isDarkMode ? Colors.orange.shade300 : Colors.orange.shade700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
             // Duration info
+            const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -402,6 +437,58 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ],
               ),
             ),
+            
+            // Location or link
+            if (_event!.location.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? Colors.grey.shade800
+                      : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _event!.isOnlineMeeting ? Icons.link : Icons.place,
+                      size: 16,
+                      color: isDarkMode
+                          ? Colors.grey.shade300
+                          : Colors.grey.shade700,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _event!.isOnlineMeeting
+                          ? InkWell(
+                              onTap: () {
+                                final Uri uri = Uri.parse(_event!.location);
+                                if (uri.scheme.isNotEmpty) {
+                                  launchUrl(uri);
+                                }
+                              },
+                              child: Text(
+                                _event!.location,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: isDarkMode ? Colors.blue.shade300 : Colors.blue.shade700,
+                                  decoration: TextDecoration.underline,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            )
+                          : Text(
+                              _event!.location,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             
             const SizedBox(height: 16),
             const Text(
@@ -622,6 +709,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   void _editEvent() {
     final titleController = TextEditingController(text: _event!.title);
     final descriptionController = TextEditingController(text: _event!.description);
+    final locationController = TextEditingController(text: _event!.location);
     
     DateTime selectedDate = DateTime(
       _event!.startTime.year,
@@ -639,6 +727,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       minute: _event!.endTime.minute,
     );
     
+    bool isOnlineMeeting = _event!.isOnlineMeeting;
     List<String> selectedAttendees = List.from(_event!.attendees);
     List<Map<String, dynamic>> teamMembers = [];
     
@@ -647,7 +736,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: const Text('Edit Event'),
+            title: const Text('Edit Meeting'),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -656,7 +745,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   TextField(
                     controller: titleController,
                     decoration: const InputDecoration(
-                      labelText: 'Event Title',
+                      labelText: 'Meeting Title',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -667,6 +756,133 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Description',
                       border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Meeting Type - Online or Offline
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Meeting Type',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade200,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    isOnlineMeeting = true;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: isOnlineMeeting
+                                        ? Theme.of(context).brightness == Brightness.dark
+                                            ? Colors.blue.shade800
+                                            : Colors.blue.shade100
+                                        : Colors.transparent,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.videocam,
+                                        color: isOnlineMeeting
+                                            ? Theme.of(context).brightness == Brightness.dark
+                                                ? Colors.white
+                                                : Colors.blue.shade800
+                                            : Colors.grey,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Online',
+                                        style: TextStyle(
+                                          fontWeight: isOnlineMeeting ? FontWeight.bold : FontWeight.normal,
+                                          color: isOnlineMeeting
+                                              ? Theme.of(context).brightness == Brightness.dark
+                                                  ? Colors.white
+                                                  : Colors.blue.shade800
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    isOnlineMeeting = false;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: !isOnlineMeeting
+                                        ? Theme.of(context).brightness == Brightness.dark
+                                            ? Colors.orange.shade800
+                                            : Colors.orange.shade100
+                                        : Colors.transparent,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.location_on,
+                                        color: !isOnlineMeeting
+                                            ? Theme.of(context).brightness == Brightness.dark
+                                                ? Colors.white
+                                                : Colors.orange.shade800
+                                            : Colors.grey,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Offline',
+                                        style: TextStyle(
+                                          fontWeight: !isOnlineMeeting ? FontWeight.bold : FontWeight.normal,
+                                          color: !isOnlineMeeting
+                                              ? Theme.of(context).brightness == Brightness.dark
+                                                  ? Colors.white
+                                                  : Colors.orange.shade800
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Location or link field
+                  TextField(
+                    controller: locationController,
+                    decoration: InputDecoration(
+                      labelText: isOnlineMeeting ? 'Meeting Link' : 'Meeting Location',
+                      hintText: isOnlineMeeting ? 'https://...' : 'Enter physical location',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: Icon(isOnlineMeeting ? Icons.link : Icons.location_on),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -707,18 +923,44 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             );
                             
                             if (time != null && mounted) {
-                              setState(() {
-                                startTime = time;
-                                
-                                // If end time is before start time, adjust it
-                                if (endTime.hour < startTime.hour ||
-                                    (endTime.hour == startTime.hour && endTime.minute < startTime.minute)) {
-                                  endTime = TimeOfDay(
-                                    hour: startTime.hour + 1,
-                                    minute: startTime.minute,
+                              final startDateTime = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                startTime.hour,
+                                startTime.minute,
+                              );
+                              
+                              final proposedEndDateTime = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                time.hour,
+                                time.minute,
+                              );
+                              
+                              // Handle case where end time is earlier than start time (next day)
+                              final adjustedEndDateTime = proposedEndDateTime.isBefore(startDateTime)
+                                  ? proposedEndDateTime.add(const Duration(days: 1))
+                                  : proposedEndDateTime;
+                              
+                              final duration = adjustedEndDateTime.difference(startDateTime);
+                              
+                              if (duration.inHours > 5) {
+                                // Show error dialog if duration exceeds 5 hours
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Meeting duration cannot exceed 5 hours'),
+                                      backgroundColor: Colors.red,
+                                    ),
                                   );
                                 }
-                              });
+                              } else {
+                                setState(() {
+                                  startTime = time;
+                                });
+                              }
                             }
                           },
                         ),
@@ -905,13 +1147,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 onPressed: () async {
                   if (titleController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter an event title')),
+                      const SnackBar(content: Text('Please enter a meeting title')),
                     );
                     return;
                   }
                   
                   try {
-                    // Update event
+                    // Create start and end datetimes
                     final startDateTime = DateTime(
                       selectedDate.year,
                       selectedDate.month,
@@ -928,6 +1170,23 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       endTime.minute,
                     );
                     
+                    // Adjust end time if it's earlier than start time (next day)
+                    final adjustedEndDateTime = endDateTime.isBefore(startDateTime)
+                        ? endDateTime.add(const Duration(days: 1))
+                        : endDateTime;
+                    
+                    // Verify meeting duration doesn't exceed 5 hours
+                    final duration = adjustedEndDateTime.difference(startDateTime);
+                    if (duration.inHours > 5) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Meeting duration cannot exceed 5 hours'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    
                     // Always include current user (host) in attendees
                     if (!selectedAttendees.contains(_event!.createdBy)) {
                       selectedAttendees.add(_event!.createdBy);
@@ -941,8 +1200,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       'title': titleController.text,
                       'description': descriptionController.text,
                       'startTime': Timestamp.fromDate(startDateTime),
-                      'endTime': Timestamp.fromDate(endDateTime),
+                      'endTime': Timestamp.fromDate(adjustedEndDateTime),
                       'attendees': selectedAttendees,
+                      'isOnlineMeeting': isOnlineMeeting,
+                      'location': locationController.text,
                     });
                     
                     if (mounted) {

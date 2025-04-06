@@ -21,6 +21,7 @@ import 'package:taskhive/screens/progress_detail_screen.dart';
 import 'package:taskhive/theme/app_theme.dart';
 import 'package:taskhive/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:taskhive/screens/notification_list_screen.dart';
 
 // Global variable to store the current user ID
 String? currentUserId;
@@ -34,6 +35,9 @@ void main() async {
   // Load initial theme preference
   final prefs = await SharedPreferences.getInstance();
   final isDarkMode = prefs.getBool('isDarkMode') ?? false;
+  
+  // Always show onboarding for now - remove this line later when onboarding is verified
+  await prefs.setBool('hasSeenOnboarding', false);
   final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
   
   try {
@@ -47,18 +51,10 @@ void main() async {
       logger.info('Connected to Firebase emulators');
     }
     
-    // For development: sign out when restarting the app to force login
+    // Sign out any user to ensure fresh login
     await FirebaseAuth.instance.signOut();
-    
-    // Reset onboarding for testing
-    await prefs.setBool('hasSeenOnboarding', false);
-    
-    // Set current user ID if already logged in
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      currentUserId = user.uid;
-      logger.info('User already logged in: $currentUserId');
-    }
+    currentUserId = null;
+    logger.info('User signed out on app startup to ensure proper authentication');
 
   } catch (e) {
     logger.severe('Error initializing Firebase', e);
@@ -198,6 +194,7 @@ class _TaskHiveAppState extends State<TaskHiveApp> {
         '/profile': (context) => const ProfileScreen(),
         '/collaboration': (context) => const CollaborationScreen(),
         '/analytics': (context) => const AnalyticsScreen(),
+        '/notifications': (context) => const NotificationListScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/project') {

@@ -21,6 +21,44 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    // No longer auto-redirecting users
+    // _checkCurrentUser();
+  }
+
+  // We're no longer auto-redirecting users, they must log in explicitly
+  // Keeping this commented code for reference
+  /*
+  Future<void> _checkCurrentUser() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      logger.info('User already logged in, redirecting: ${user.uid}');
+      currentUserId = user.uid;
+      
+      // Check if this user has a team
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+          
+      if (mounted) {
+        if (userDoc.exists && 
+            userDoc.data()!.containsKey('currentTeamId') && 
+            userDoc.data()!['currentTeamId'] != null && 
+            userDoc.data()!['currentTeamId'] != '') {
+          // User has a team, go to dashboard
+          Navigator.of(context).pushNamedAndRemoveUntil('/dashboard', (route) => false);
+        } else {
+          // User needs to join a team
+          Navigator.of(context).pushNamedAndRemoveUntil('/team', (route) => false);
+        }
+      }
+    }
+  }
+  */
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -86,6 +124,82 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       logger.severe('Unexpected login error', e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _sendPasswordResetEmail() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email address'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid email address'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Password reset email sent to $email'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = 'No user found with this email';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        default:
+          errorMessage = 'Error sending password reset email. Please try again.';
+          logger.warning('Password reset error: ${e.code}', e);
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      logger.severe('Unexpected password reset error', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -213,6 +327,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.pushNamed(context, '/register');
                       },
                       child: const Text("Don't have an account? Register"),
+                    ),
+                    TextButton(
+                      onPressed: _isLoading ? null : _sendPasswordResetEmail,
+                      child: const Text(
+                        "Forgot Password?",
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
                     ),
                   ],
                 ),

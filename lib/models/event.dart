@@ -10,6 +10,8 @@ class Event {
   final String createdBy;
   final DateTime createdAt;
   final List<String> attendees; // List of user IDs to attend the event
+  final bool isOnlineMeeting; // Whether this is an online meeting
+  final String location; // Meeting link for online or physical location for offline
 
   Event({
     required this.id,
@@ -21,6 +23,8 @@ class Event {
     required this.createdBy,
     required this.createdAt,
     required this.attendees,
+    this.isOnlineMeeting = true,
+    this.location = '',
   });
 
   factory Event.fromFirestore(DocumentSnapshot doc) {
@@ -35,6 +39,8 @@ class Event {
       createdBy: data['createdBy'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       attendees: List<String>.from(data['attendees'] ?? []),
+      isOnlineMeeting: data['isOnlineMeeting'] ?? true,
+      location: data['location'] ?? '',
     );
   }
 
@@ -48,6 +54,8 @@ class Event {
       'createdBy': createdBy,
       'createdAt': Timestamp.fromDate(createdAt),
       'attendees': attendees,
+      'isOnlineMeeting': isOnlineMeeting,
+      'location': location,
     };
   }
 
@@ -57,6 +65,8 @@ class Event {
     DateTime? startTime,
     DateTime? endTime,
     List<String>? attendees,
+    bool? isOnlineMeeting,
+    String? location,
   }) {
     return Event(
       id: id,
@@ -68,6 +78,8 @@ class Event {
       createdBy: createdBy,
       createdAt: createdAt,
       attendees: attendees ?? this.attendees,
+      isOnlineMeeting: isOnlineMeeting ?? this.isOnlineMeeting,
+      location: location ?? this.location,
     );
   }
 } 
