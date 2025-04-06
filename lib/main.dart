@@ -46,6 +46,17 @@ void main() async {
     await Firebase.initializeApp();
     logger.info('Firebase initialized successfully');
     
+    // Enable session persistence so users don't need to login every time
+    await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+    logger.info('Firebase Auth persistence set to LOCAL');
+    
+    // Update current user ID if user is already logged in
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      currentUserId = currentUser.uid;
+      logger.info('Found existing logged in user: $currentUserId');
+    }
+    
     // Connect to Firebase emulators for development
     if (const bool.fromEnvironment('USE_FIREBASE_EMU')) {
       FirebaseStorage.instance.useStorageEmulator('localhost', 9199);
@@ -53,10 +64,10 @@ void main() async {
       logger.info('Connected to Firebase emulators');
     }
     
-    // Sign out any user to ensure fresh login
-    await FirebaseAuth.instance.signOut();
-    currentUserId = null;
-    logger.info('User signed out on app startup to ensure proper authentication');
+    // Remove the forced sign out
+    // await FirebaseAuth.instance.signOut();
+    // currentUserId = null;
+    // logger.info('User signed out on app startup to ensure proper authentication');
 
   } catch (e) {
     logger.severe('Error initializing Firebase', e);

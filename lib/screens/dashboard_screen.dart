@@ -18,6 +18,10 @@ import 'dart:async';
 import 'package:taskhive/screens/notification_list_screen.dart';
 import 'package:taskhive/utils/navigation_utils.dart';
 import 'package:taskhive/screens/chat_hub_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:taskhive/screens/tutorial_screen.dart';
+import 'package:taskhive/screens/about_screen.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String? teamId;
@@ -37,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isTeamCreator = false;
   int _inAppNotificationCount = 0;
   late Timer _refreshTimer;
-  // Track back button presses for exit confirmation
+  // Track back button presses for exit
   DateTime? _lastBackPressTime;
 
   @override
@@ -203,61 +207,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final screens = [
-      SingleChildScrollView(
-        child: _buildDashboard(),
-      ),
-      const CalendarScreen(),
-      const ProgressScreen(),
+      _buildDashboard(),
       const ChatHubScreen(),
+      const ProgressScreen(),
+      const CalendarScreen(),
       const FocusScreen(),
-      const ProfileScreen(),
     ];
 
-    return BackNavigationHandler.wrapDashboard(
-      selectedIndex: _selectedIndex,
-      onTabChange: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      context: context,
-      lastBackPressTime: _lastBackPressTime,
-      setLastBackPressTime: (time) {
-        setState(() {
-          _lastBackPressTime = time;
-        });
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        // Handle back button press to confirm exit
+        final now = DateTime.now();
+        if (_lastBackPressTime == null || 
+            now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+          _lastBackPressTime = now;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Press back again to exit'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return false;
+        }
+        return true;
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('TaskHive'),
+          title: Row(
+            children: [
+              Icon(
+                Icons.hive,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.amber.shade300
+                    : Colors.amber.shade700,
+                size: 28,
+              ),
+              const SizedBox(width: 8),
+              const Text('TaskHive'),
+            ],
+          ),
           actions: [
-            // In-app notifications
+            // Notification bell with counter
             Stack(
               children: [
                 IconButton(
                   icon: const Icon(Icons.notifications),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NotificationListScreen(),
-                      ),
-                    ).then((_) {
-                      // Check for unread notifications
-                      _checkUnreadNotifications();
-                      
-                      // To be extra sure UI is in sync, set count to 0 after a short delay 
-                      // since notifications should have been marked as read
-                      Future.delayed(Duration(milliseconds: 500), () {
-                        if (mounted) {
-                          setState(() {
-                            _inAppNotificationCount = 0;
-                          });
-                        }
-                      });
-                    });
+                  onPressed: () async {
+                    await Navigator.pushNamed(context, '/notifications');
+                    _checkUnreadNotifications(); // Refresh count when returning
                   },
-                  tooltip: 'Notifications',
                 ),
                 if (_inAppNotificationCount > 0)
                   Positioned(
@@ -286,35 +284,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
               ],
             ),
-            
-            if (_currentTeamId != null && _isTeamCreator) ...[
-              IconButton(
-                icon: const Icon(Icons.key),
-                onPressed: _showTeamCodeDialog,
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_forever),
-                onPressed: _showDisbandTeamDialog,
-                tooltip: 'Disband Team',
-              ),
-            ],
-            IconButton(
-              icon: const Icon(Icons.group),
-              onPressed: () async {
-                final result = await Navigator.pushNamed(
-                  context,
-                  '/team',
-                );
-                if (result != null && result is String) {
-                  setState(() {
-                    _currentTeamId = result;
-                  });
-                  await _loadData();
-                }
-              },
-            ),
           ],
         ),
+        drawer: _buildDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : screens[_selectedIndex],
@@ -365,9 +337,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               _buildNavDestination(
                 context,
-                Icons.calendar_month_outlined,
-                Icons.calendar_month,
-                'Calendar',
+                Icons.chat_outlined,
+                Icons.chat,
+                'Chat',
                 1,
               ),
               _buildNavDestination(
@@ -379,9 +351,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               _buildNavDestination(
                 context,
-                Icons.chat_outlined,
-                Icons.chat,
-                'Chat',
+                Icons.calendar_month_outlined,
+                Icons.calendar_month,
+                'Calendar',
                 3,
               ),
               _buildNavDestination(
@@ -391,19 +363,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 'Focus',
                 4,
               ),
-              _buildNavDestination(
-                context,
-                Icons.person_outline,
-                Icons.person,
-                'Profile',
-                5,
-              ),
             ],
           ),
         ),
         floatingActionButton: _selectedIndex == 0 && _isTeamCreator
             ? FloatingActionButton(
                 onPressed: _showCreateProjectDialog,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                tooltip: 'Create Hive',
                 child: const Icon(Icons.add),
               )
             : null,
@@ -1767,5 +1735,418 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       // Error handling
     }
+  }
+
+  // Add new drawer method with profile functions
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .doc(currentUserId)
+                .get(),
+            builder: (context, snapshot) {
+              // User info for the drawer header
+              String name = 'Loading...';
+              String email = '';
+              String role = 'Member';
+              
+              if (snapshot.hasData && snapshot.data != null) {
+                final userData = snapshot.data!.data() as Map<String, dynamic>?;
+                name = userData?['name'] ?? 'Unknown User';
+                email = FirebaseAuth.instance.currentUser?.email ?? '';
+                role = userData?['role'] ?? 'Member';
+              }
+              
+              return UserAccountsDrawerHeader(
+                accountName: Text(name),
+                accountEmail: Text(email),
+                currentAccountPicture: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  child: Text(
+                    name.isNotEmpty ? name[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.deepOrange.shade900
+                      : Colors.orange.shade400,
+                ),
+              );
+            }
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit),
+            title: const Text('Edit Profile'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              _showEditProfileDialog();
+            },
+          ),
+          
+          // Team section
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
+            child: Text('TEAM', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.group),
+            title: const Text('Switch Team'),
+            onTap: () async {
+              Navigator.pop(context); // Close drawer
+              final result = await Navigator.pushNamed(
+                context,
+                '/team',
+              );
+              if (result != null && result is String) {
+                setState(() {
+                  _currentTeamId = result;
+                });
+                await _loadData();
+              }
+            },
+          ),
+          
+          if (_currentTeamId != null && _isTeamCreator)
+            ListTile(
+              leading: const Icon(Icons.key),
+              title: const Text('Team Code'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                _showTeamCodeDialog();
+              },
+            ),
+            
+          if (_currentTeamId != null && _isTeamCreator)
+            ListTile(
+              leading: const Icon(Icons.delete_forever),
+              title: const Text('Disband Team'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                _showDisbandTeamDialog();
+              },
+            ),
+          
+          // Settings Section
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
+            child: Text('SETTINGS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.dark_mode),
+            title: const Text('Dark Mode'),
+            trailing: FutureBuilder<SharedPreferences>(
+              future: SharedPreferences.getInstance(),
+              builder: (context, snapshot) {
+                bool isDarkMode = false;
+                if (snapshot.hasData) {
+                  isDarkMode = snapshot.data!.getBool('isDarkMode') ?? false;
+                }
+                
+                return Switch(
+                  value: isDarkMode,
+                  onChanged: (value) async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('isDarkMode', value);
+                    
+                    final appState = TaskHiveApp.of(context);
+                    if (appState != null) {
+                      appState.toggleTheme(value);
+                    }
+                    
+                    setState(() {}); // Update UI
+                  },
+                  activeColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.deepOrange.shade300
+                      : Colors.orange.shade700,
+                );
+              },
+            ),
+            onTap: () {
+              // The switch handles the action
+            },
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.help_outline),
+            title: const Text('App Tutorial'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TutorialScreen()),
+              );
+            },
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.lock),
+            title: const Text('Change Password'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              _showChangePasswordDialog();
+            },
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.info),
+            title: const Text('About TaskHive'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AboutScreen()),
+              );
+            },
+          ),
+          
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+            onTap: () async {
+              try {
+                await FirebaseAuth.instance.signOut();
+                if (mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                    (route) => false,
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error signing out: ${e.toString()}')),
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Add edit profile dialog method
+  void _showEditProfileDialog() {
+    final nameController = TextEditingController();
+    
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUserId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        nameController.text = doc.data()?['name'] ?? '';
+      }
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Edit Profile'),
+          content: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Username',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Username cannot be empty')),
+                  );
+                  return;
+                }
+
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(currentUserId)
+                      .update({
+                    'name': nameController.text.trim(),
+                  });
+
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Profile updated successfully')),
+                    );
+                    setState(() {});  // Refresh UI
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error updating profile: ${e.toString()}')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  // Add change password dialog method
+  void _showChangePasswordDialog() {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    bool obscureCurrentPassword = true;
+    bool obscureNewPassword = true;
+    bool obscureConfirmPassword = true;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Change Password'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: currentPasswordController,
+                  obscureText: obscureCurrentPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Current Password',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscureCurrentPassword = !obscureCurrentPassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: newPasswordController,
+                  obscureText: obscureNewPassword,
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureNewPassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscureNewPassword = !obscureNewPassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: obscureConfirmPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm New Password',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscureConfirmPassword = !obscureConfirmPassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (currentPasswordController.text.isEmpty ||
+                    newPasswordController.text.isEmpty ||
+                    confirmPasswordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please fill all fields')),
+                  );
+                  return;
+                }
+
+                if (newPasswordController.text != confirmPasswordController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('New passwords do not match')),
+                  );
+                  return;
+                }
+
+                try {
+                  // Get user credentials for reauthentication
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user == null) return;
+
+                  final email = user.email;
+                  if (email == null) {
+                    throw Exception('User email not found');
+                  }
+
+                  // Reauthenticate
+                  final credential = EmailAuthProvider.credential(
+                    email: email,
+                    password: currentPasswordController.text,
+                  );
+                  await user.reauthenticateWithCredential(credential);
+
+                  // Update password
+                  await user.updatePassword(newPasswordController.text);
+
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password updated successfully')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: ${e.toString()}')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Change Password'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 } 

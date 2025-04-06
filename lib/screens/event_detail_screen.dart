@@ -139,7 +139,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 icon: const Icon(Icons.delete),
                 onPressed: _showDeleteConfirmation,
                 tooltip: 'Delete Event',
-                color: Colors.redAccent,
               ),
             ],
           ],
@@ -1001,15 +1000,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             );
                             
                             if (time != null && mounted) {
-                              final startDateTime = DateTime(
-                                selectedDate.year,
-                                selectedDate.month,
-                                selectedDate.day,
-                                startTime.hour,
-                                startTime.minute,
-                              );
-                              
-                              final proposedEndDateTime = DateTime(
+                              // Check if the new start time would make the meeting longer than 5 hours
+                              final newStartDateTime = DateTime(
                                 selectedDate.year,
                                 selectedDate.month,
                                 selectedDate.day,
@@ -1017,15 +1009,23 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 time.minute,
                               );
                               
-                              // Handle case where end time is earlier than start time (next day)
-                              final adjustedEndDateTime = proposedEndDateTime.isBefore(startDateTime)
-                                  ? proposedEndDateTime.add(const Duration(days: 1))
-                                  : proposedEndDateTime;
+                              final endDateTime = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                endTime.hour,
+                                endTime.minute,
+                              );
                               
-                              final duration = adjustedEndDateTime.difference(startDateTime);
+                              // Adjust if end time is earlier in the day
+                              final adjustedEndDateTime = endDateTime.isBefore(newStartDateTime)
+                                  ? endDateTime.add(const Duration(days: 1))
+                                  : endDateTime;
+                                  
+                              // Calculate duration in minutes
+                              final durationMinutes = adjustedEndDateTime.difference(newStartDateTime).inMinutes;
                               
-                              if (duration.inHours > 5) {
-                                // Show error dialog if duration exceeds 5 hours
+                              if (durationMinutes > 300) { // 5 hours = 300 minutes
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -1057,9 +1057,45 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             );
                             
                             if (time != null && mounted) {
-                              setState(() {
-                                endTime = time;
-                              });
+                              // Check if the new end time would make the meeting longer than 5 hours
+                              final startDateTime = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                startTime.hour,
+                                startTime.minute,
+                              );
+                              
+                              final newEndDateTime = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                time.hour,
+                                time.minute,
+                              );
+                              
+                              // Adjust if end time is earlier in the day
+                              final adjustedEndDateTime = newEndDateTime.isBefore(startDateTime)
+                                  ? newEndDateTime.add(const Duration(days: 1))
+                                  : newEndDateTime;
+                              
+                              // Calculate duration in minutes
+                              final durationMinutes = adjustedEndDateTime.difference(startDateTime).inMinutes;
+                              
+                              if (durationMinutes > 300) { // 5 hours = 300 minutes
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Meeting duration cannot exceed 5 hours'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              } else {
+                                setState(() {
+                                  endTime = time;
+                                });
+                              }
                             }
                           },
                         ),
@@ -1254,8 +1290,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         : endDateTime;
                     
                     // Verify meeting duration doesn't exceed 5 hours
-                    final duration = adjustedEndDateTime.difference(startDateTime);
-                    if (duration.inHours > 5) {
+                    final durationMinutes = adjustedEndDateTime.difference(startDateTime).inMinutes;
+                    if (durationMinutes > 300) { // 5 hours = 300 minutes
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Meeting duration cannot exceed 5 hours'),
@@ -1311,20 +1347,28 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   void _launchUrl(String url) async {
     try {
-      final Uri uri = Uri.parse(url);
+      // Make sure URL starts with http:// or https://
+      final String normalizedUrl = url.startsWith('http://') || url.startsWith('https://')
+          ? url
+          : 'https://$url';
+          
+      final Uri uri = Uri.parse(normalizedUrl);
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not launch $url')),
+            SnackBar(content: Text('Could not launch $normalizedUrl')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid URL: $url')),
+          SnackBar(content: Text('Invalid URL: $url (Error: $e)')),
         );
       }
     }
@@ -1336,12 +1380,24 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       final Uri googleMapsUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encodedLocation');
       
       if (await canLaunchUrl(googleMapsUri)) {
-        await launchUrl(googleMapsUri);
+        await launchUrl(
+          googleMapsUri,
+          mode: LaunchMode.externalApplication,
+        );
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not open maps for: $location')),
+        // Try alternate map URL format
+        final Uri alternateUri = Uri.parse('geo:0,0?q=$encodedLocation');
+        if (await canLaunchUrl(alternateUri)) {
+          await launchUrl(
+            alternateUri,
+            mode: LaunchMode.externalApplication,
           );
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not open maps for: $location')),
+            );
+          }
         }
       }
     } catch (e) {

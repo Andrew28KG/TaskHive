@@ -1,7 +1,7 @@
 -- Merging decision tree log ---
 application
-INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:2:5-33:19
-INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:2:5-33:19
+INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:5:5-45:19
+INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:5:5-45:19
 MERGED from [:cloud_firestore] C:\Users\andre\Documents\todo_app\build\cloud_firestore\intermediates\merged_manifest\release\AndroidManifest.xml:7:5-13:19
 MERGED from [:cloud_firestore] C:\Users\andre\Documents\todo_app\build\cloud_firestore\intermediates\merged_manifest\release\AndroidManifest.xml:7:5-13:19
 MERGED from [:firebase_app_check] C:\Users\andre\Documents\todo_app\build\firebase_app_check\intermediates\merged_manifest\release\AndroidManifest.xml:7:5-13:19
@@ -93,17 +93,17 @@ MERGED from [com.google.android.play:core-common:2.0.3] C:\Users\andre\.gradle\c
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.13.1] C:\Users\andre\.gradle\caches\transforms-4\ecd9e67f08c626bd2cacf3c9afb45715\transformed\core-1.13.1\AndroidManifest.xml:28:18-86
 	android:label
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:3:9-34
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:6:9-34
 	android:icon
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:5:9-43
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:8:9-43
 	android:name
 		INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:4:9-42
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:7:9-42
 manifest
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:1:1-45:12
-INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:1:1-45:12
-INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:1:1-45:12
-INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:1:1-45:12
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:1:1-79:12
+INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:1:1-79:12
+INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:1:1-79:12
+INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:1:1-79:12
 MERGED from [:package_info_plus] C:\Users\andre\Documents\todo_app\build\package_info_plus\intermediates\merged_manifest\release\AndroidManifest.xml:2:1-7:12
 MERGED from [:shared_preferences_android] C:\Users\andre\Documents\todo_app\build\shared_preferences_android\intermediates\merged_manifest\release\AndroidManifest.xml:2:1-7:12
 MERGED from [:cloud_firestore] C:\Users\andre\Documents\todo_app\build\cloud_firestore\intermediates\merged_manifest\release\AndroidManifest.xml:2:1-15:12
@@ -198,58 +198,108 @@ MERGED from [com.google.android.play:core-common:2.0.3] C:\Users\andre\.gradle\c
 		INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml
 	xmlns:android
 		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:1:11-69
+uses-permission#android.permission.INTERNET
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:3:5-66
+MERGED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:25:5-67
+MERGED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:25:5-67
+MERGED from [com.google.firebase:firebase-firestore:25.1.3] C:\Users\andre\.gradle\caches\transforms-4\5ba10dacddf7a9be7478af9e6ca85235\transformed\jetified-firebase-firestore-25.1.3\AndroidManifest.xml:11:5-67
+MERGED from [com.google.firebase:firebase-firestore:25.1.3] C:\Users\andre\.gradle\caches\transforms-4\5ba10dacddf7a9be7478af9e6ca85235\transformed\jetified-firebase-firestore-25.1.3\AndroidManifest.xml:11:5-67
+MERGED from [com.google.firebase:firebase-storage:21.0.1] C:\Users\andre\.gradle\caches\transforms-4\3d811b35c0c59cf1badc46f86d5ed351\transformed\jetified-firebase-storage-21.0.1\AndroidManifest.xml:24:5-67
+MERGED from [com.google.firebase:firebase-storage:21.0.1] C:\Users\andre\.gradle\caches\transforms-4\3d811b35c0c59cf1badc46f86d5ed351\transformed\jetified-firebase-storage-21.0.1\AndroidManifest.xml:24:5-67
+MERGED from [com.google.android.gms:play-services-measurement:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\8f5f7c352007aaf1bdd8de843aec615d\transformed\jetified-play-services-measurement-22.4.0\AndroidManifest.xml:23:5-67
+MERGED from [com.google.android.gms:play-services-measurement:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\8f5f7c352007aaf1bdd8de843aec615d\transformed\jetified-play-services-measurement-22.4.0\AndroidManifest.xml:23:5-67
+MERGED from [com.google.android.gms:play-services-measurement-api:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\e21e736ba46c7e7bcf53e7c7bffbc52b\transformed\jetified-play-services-measurement-api-22.4.0\AndroidManifest.xml:22:5-67
+MERGED from [com.google.android.gms:play-services-measurement-api:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\e21e736ba46c7e7bcf53e7c7bffbc52b\transformed\jetified-play-services-measurement-api-22.4.0\AndroidManifest.xml:22:5-67
+MERGED from [com.google.android.recaptcha:recaptcha:18.6.1] C:\Users\andre\.gradle\caches\transforms-4\5247bbbe9db32a6c5de617043e28b902\transformed\jetified-recaptcha-18.6.1\AndroidManifest.xml:7:5-67
+MERGED from [com.google.android.recaptcha:recaptcha:18.6.1] C:\Users\andre\.gradle\caches\transforms-4\5247bbbe9db32a6c5de617043e28b902\transformed\jetified-recaptcha-18.6.1\AndroidManifest.xml:7:5-67
+MERGED from [com.google.firebase:firebase-installations:18.0.0] C:\Users\andre\.gradle\caches\transforms-4\0bb4703f1403bfe99dee28c12881233e\transformed\jetified-firebase-installations-18.0.0\AndroidManifest.xml:8:5-67
+MERGED from [com.google.firebase:firebase-installations:18.0.0] C:\Users\andre\.gradle\caches\transforms-4\0bb4703f1403bfe99dee28c12881233e\transformed\jetified-firebase-installations-18.0.0\AndroidManifest.xml:8:5-67
+MERGED from [com.google.android.gms:play-services-measurement-impl:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\cbc42bcb83c967a77f3354293782f6f4\transformed\jetified-play-services-measurement-impl-22.4.0\AndroidManifest.xml:23:5-67
+MERGED from [com.google.android.gms:play-services-measurement-impl:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\cbc42bcb83c967a77f3354293782f6f4\transformed\jetified-play-services-measurement-impl-22.4.0\AndroidManifest.xml:23:5-67
+MERGED from [com.google.android.gms:play-services-measurement-sdk-api:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\bd30763acfe808ff213817fc0589a893\transformed\jetified-play-services-measurement-sdk-api-22.4.0\AndroidManifest.xml:23:5-67
+MERGED from [com.google.android.gms:play-services-measurement-sdk-api:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\bd30763acfe808ff213817fc0589a893\transformed\jetified-play-services-measurement-sdk-api-22.4.0\AndroidManifest.xml:23:5-67
+	android:name
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:3:22-64
 queries
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:39:5-44:15
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:51:5-78:15
 intent#action:name:android.intent.action.PROCESS_TEXT+data:mimeType:text/plain
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:40:9-43:18
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:52:9-55:18
 action#android.intent.action.PROCESS_TEXT
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:41:13-72
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:53:13-72
 	android:name
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:41:21-70
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:53:21-70
 data
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:42:13-50
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:54:13-50
+	android:host
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:76:41-57
+	android:scheme
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:36:23-44
 	android:mimeType
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:42:19-48
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:54:19-48
+intent#action:name:android.intent.action.VIEW+data:scheme:https
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:58:9-61:18
+action#android.intent.action.VIEW
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:59:13-65
+	android:name
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:59:21-62
+intent#action:name:android.intent.action.VIEW+data:scheme:http
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:62:9-65:18
+intent#action:name:android.intent.action.VIEW+data:scheme:geo
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:66:9-69:18
+intent#action:name:android.intent.action.VIEW+data:scheme:google.navigation
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:70:9-73:18
+intent#action:name:android.intent.action.VIEW+data:host:*+data:scheme:meet
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:74:9-77:18
 activity#com.example.todo_app.MainActivity
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:6:9-27:20
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:9:9-39:20
 	android:launchMode
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:9:13-43
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:12:13-43
 	android:hardwareAccelerated
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:13:13-47
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:16:13-47
 	android:windowSoftInputMode
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:14:13-55
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:17:13-55
 	android:exported
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:8:13-36
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:11:13-36
 	android:configChanges
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:12:13-163
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:15:13-163
 	android:theme
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:11:13-47
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:14:13-47
 	android:taskAffinity
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:10:13-36
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:13:13-36
 	android:name
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:7:13-41
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:10:13-41
 meta-data#io.flutter.embedding.android.NormalTheme
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:19:13-22:17
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:22:13-25:17
 	android:resource
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:21:15-52
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:24:15-52
 	android:name
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:20:15-70
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:23:15-70
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:23:13-26:29
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:26:13-29:29
 action#android.intent.action.MAIN
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:24:17-68
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:27:17-68
 	android:name
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:24:25-66
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:27:25-66
 category#android.intent.category.LAUNCHER
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:25:17-76
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:28:17-76
 	android:name
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:25:27-74
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:28:27-74
+intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:scheme:http+data:scheme:https
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:32:13-38:29
+category#android.intent.category.DEFAULT
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:34:17-76
+	android:name
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:34:27-73
+category#android.intent.category.BROWSABLE
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:35:17-78
+	android:name
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:35:27-75
 meta-data#flutterEmbedding
-ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:30:9-32:33
+ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:42:9-44:33
 	android:value
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:32:13-30
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:44:13-30
 	android:name
-		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:31:13-44
+		ADDED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml:43:13-44
 uses-sdk
 INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\andre\Documents\todo_app\android\app\src\main\AndroidManifest.xml
@@ -502,26 +552,6 @@ ADDED from [:firebase_core] C:\Users\andre\Documents\todo_app\build\firebase_cor
 		ADDED from [:firebase_core] C:\Users\andre\Documents\todo_app\build\firebase_core\intermediates\merged_manifest\release\AndroidManifest.xml:11:17-82
 	android:name
 		ADDED from [:firebase_core] C:\Users\andre\Documents\todo_app\build\firebase_core\intermediates\merged_manifest\release\AndroidManifest.xml:10:17-124
-uses-permission#android.permission.INTERNET
-ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:25:5-67
-MERGED from [com.google.firebase:firebase-firestore:25.1.3] C:\Users\andre\.gradle\caches\transforms-4\5ba10dacddf7a9be7478af9e6ca85235\transformed\jetified-firebase-firestore-25.1.3\AndroidManifest.xml:11:5-67
-MERGED from [com.google.firebase:firebase-firestore:25.1.3] C:\Users\andre\.gradle\caches\transforms-4\5ba10dacddf7a9be7478af9e6ca85235\transformed\jetified-firebase-firestore-25.1.3\AndroidManifest.xml:11:5-67
-MERGED from [com.google.firebase:firebase-storage:21.0.1] C:\Users\andre\.gradle\caches\transforms-4\3d811b35c0c59cf1badc46f86d5ed351\transformed\jetified-firebase-storage-21.0.1\AndroidManifest.xml:24:5-67
-MERGED from [com.google.firebase:firebase-storage:21.0.1] C:\Users\andre\.gradle\caches\transforms-4\3d811b35c0c59cf1badc46f86d5ed351\transformed\jetified-firebase-storage-21.0.1\AndroidManifest.xml:24:5-67
-MERGED from [com.google.android.gms:play-services-measurement:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\8f5f7c352007aaf1bdd8de843aec615d\transformed\jetified-play-services-measurement-22.4.0\AndroidManifest.xml:23:5-67
-MERGED from [com.google.android.gms:play-services-measurement:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\8f5f7c352007aaf1bdd8de843aec615d\transformed\jetified-play-services-measurement-22.4.0\AndroidManifest.xml:23:5-67
-MERGED from [com.google.android.gms:play-services-measurement-api:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\e21e736ba46c7e7bcf53e7c7bffbc52b\transformed\jetified-play-services-measurement-api-22.4.0\AndroidManifest.xml:22:5-67
-MERGED from [com.google.android.gms:play-services-measurement-api:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\e21e736ba46c7e7bcf53e7c7bffbc52b\transformed\jetified-play-services-measurement-api-22.4.0\AndroidManifest.xml:22:5-67
-MERGED from [com.google.android.recaptcha:recaptcha:18.6.1] C:\Users\andre\.gradle\caches\transforms-4\5247bbbe9db32a6c5de617043e28b902\transformed\jetified-recaptcha-18.6.1\AndroidManifest.xml:7:5-67
-MERGED from [com.google.android.recaptcha:recaptcha:18.6.1] C:\Users\andre\.gradle\caches\transforms-4\5247bbbe9db32a6c5de617043e28b902\transformed\jetified-recaptcha-18.6.1\AndroidManifest.xml:7:5-67
-MERGED from [com.google.firebase:firebase-installations:18.0.0] C:\Users\andre\.gradle\caches\transforms-4\0bb4703f1403bfe99dee28c12881233e\transformed\jetified-firebase-installations-18.0.0\AndroidManifest.xml:8:5-67
-MERGED from [com.google.firebase:firebase-installations:18.0.0] C:\Users\andre\.gradle\caches\transforms-4\0bb4703f1403bfe99dee28c12881233e\transformed\jetified-firebase-installations-18.0.0\AndroidManifest.xml:8:5-67
-MERGED from [com.google.android.gms:play-services-measurement-impl:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\cbc42bcb83c967a77f3354293782f6f4\transformed\jetified-play-services-measurement-impl-22.4.0\AndroidManifest.xml:23:5-67
-MERGED from [com.google.android.gms:play-services-measurement-impl:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\cbc42bcb83c967a77f3354293782f6f4\transformed\jetified-play-services-measurement-impl-22.4.0\AndroidManifest.xml:23:5-67
-MERGED from [com.google.android.gms:play-services-measurement-sdk-api:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\bd30763acfe808ff213817fc0589a893\transformed\jetified-play-services-measurement-sdk-api-22.4.0\AndroidManifest.xml:23:5-67
-MERGED from [com.google.android.gms:play-services-measurement-sdk-api:22.4.0] C:\Users\andre\.gradle\caches\transforms-4\bd30763acfe808ff213817fc0589a893\transformed\jetified-play-services-measurement-sdk-api-22.4.0\AndroidManifest.xml:23:5-67
-	android:name
-		ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:25:22-64
 uses-permission#android.permission.ACCESS_NETWORK_STATE
 ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:26:5-79
 MERGED from [com.google.firebase:firebase-firestore:25.1.3] C:\Users\andre\.gradle\caches\transforms-4\5ba10dacddf7a9be7478af9e6ca85235\transformed\jetified-firebase-firestore-25.1.3\AndroidManifest.xml:10:5-79
@@ -558,18 +588,6 @@ ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\cac
 		ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:30:13-80
 intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:host:firebase.auth+data:path:/+data:scheme:genericidp
 ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:35:13-45:29
-action#android.intent.action.VIEW
-ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:36:17-69
-	android:name
-		ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:36:25-66
-category#android.intent.category.DEFAULT
-ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:38:17-76
-	android:name
-		ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:38:27-73
-category#android.intent.category.BROWSABLE
-ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:39:17-78
-	android:name
-		ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:39:27-75
 activity#com.google.firebase.auth.internal.RecaptchaActivity
 ADDED from [com.google.firebase:firebase-auth:23.2.0] C:\Users\andre\.gradle\caches\transforms-4\aa8adb0c5e26f5b567fddd405e9e0503\transformed\jetified-firebase-auth-23.2.0\AndroidManifest.xml:47:9-64:20
 	android:excludeFromRecents

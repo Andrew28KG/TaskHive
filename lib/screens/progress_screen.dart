@@ -264,13 +264,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const Spacer(),
-                            FilledButton.tonal(
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/all-hives');
-                              },
-                              child: const Text('View All'),
-                            ),
                           ],
                         ),
                       ),
