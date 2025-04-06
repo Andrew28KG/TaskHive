@@ -18,6 +18,7 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 - **Calendar View**: Visualize tasks and events in a calendar interface
 - **Event Planning**: Schedule team meetings and events with attendee selection
 - **Dashboard**: Get an overview of your tasks, upcoming deadlines, and team activities
+- **Discussion System**: Chat with your team in dedicated channels for tasks and projects
 - **User Profiles**: Customize your profile and manage notification preferences
 - **Dark/Light Mode**: Choose between light and dark themes for comfortable viewing
 - **Progress Tracking**: Monitor task completion and project progress
@@ -88,6 +89,7 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 - Tap on a date to see all tasks and events for that day
 - Create events by tapping the (+) button (team hosts only)
 - Select event attendees from your team members
+- Choose between online and offline meetings with appropriate location or link
 
 ### 6. Team Management
 - Create a new team or join existing teams
@@ -104,6 +106,14 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 - Choose a task to focus on
 - Provides a timer and note to track details of task
 
+### 9. Discussions
+- Access the Team Chat for team-wide discussions
+- Chat about specific tasks in dedicated discussion channels
+- Pin important messages for easy reference
+- See unread message count indicators
+- Organize chats by hives/projects
+- Pin frequently used chats for quick access
+
 ## Security Note
 
 TaskHive takes security seriously:
@@ -115,6 +125,15 @@ TaskHive takes security seriously:
 - Team data is protected with appropriate access controls
 
 **Note**: If you fork or clone this repository, you will need to set up your own Firebase project and add the required configuration files.
+
+## Recent Updates
+
+- Added Discussions feature with Team Chat and task-specific channels
+- Implemented message pinning functionality
+- Added unread message counters
+- Improved navigation with proper back button handling
+- Added online/offline options for meetings
+- Optimized notification system
 
 ## Resources
 
