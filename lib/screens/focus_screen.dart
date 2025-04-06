@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class FocusScreen extends StatefulWidget {
   final String? teamId;
@@ -377,14 +378,29 @@ class _FocusScreenState extends State<FocusScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.black
-            : Colors.white,
-        child: _selectedTask == null
-            ? _buildTaskSelection()
-            : _buildFocusDetail(),
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        // Handle timer running state if needed
+        if (_timer != null && _isTimerRunning) {
+          _showExitConfirmationDialog();
+          return true;
+        }
+        
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+        body: Container(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.black
+              : Colors.white,
+          child: _selectedTask == null
+              ? _buildTaskSelection()
+              : _buildFocusDetail(),
+        ),
       ),
     );
   }
@@ -906,6 +922,31 @@ class _FocusScreenState extends State<FocusScreen> with WidgetsBindingObserver {
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExitConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exit Confirmation'),
+        content: const Text('Are you sure you want to exit?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() => _selectedTask = null);
+            },
+            child: const Text('Exit'),
           ),
         ],
       ),

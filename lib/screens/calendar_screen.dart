@@ -8,6 +8,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:taskhive/screens/bee_detail_screen.dart';
 import 'package:taskhive/screens/event_detail_screen.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class CalendarScreen extends StatefulWidget {
   final String? teamId;
@@ -239,136 +240,54 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Calendar Header
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.deepOrange.shade900
-                    : Colors.orange.shade400,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.black26
-                        : Colors.orange.withOpacity(0.2),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'Calendar',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                    color: Colors.white,
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        // Return to home tab when back is pressed
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Calendar Header
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.deepOrange.shade900
+                      : Colors.orange.shade400,
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.black26
+                          : Colors.orange.withOpacity(0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'Calendar',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-            // Calendar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Theme.of(context).brightness == Brightness.dark
-                  ? TableCalendar<BeeTask>(
-                      firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                      lastDay: DateTime.now().add(const Duration(days: 365)),
-                      focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                      calendarFormat: CalendarFormat.month,
-                      eventLoader: _getTaskEventsForCalendar,
-                      startingDayOfWeek: StartingDayOfWeek.monday,
-                      rowHeight: 52,
-                      daysOfWeekHeight: 32,
-                      calendarStyle: CalendarStyle(
-                        selectedDecoration: BoxDecoration(
-                          color: Colors.deepOrange.shade400,
-                          shape: BoxShape.circle,
-                        ),
-                        todayDecoration: BoxDecoration(
-                          color: Colors.deepOrange.shade200.withOpacity(0.3),
-                          shape: BoxShape.circle,
-                        ),
-                        markerDecoration: BoxDecoration(
-                          color: Colors.deepOrange.shade300,
-                          shape: BoxShape.circle,
-                        ),
-                        weekendTextStyle: TextStyle(
-                          color: Colors.grey[400],
-                        ),
-                        holidayTextStyle: TextStyle(
-                          color: Colors.grey[400],
-                        ),
-                        markersMaxCount: 3,
-                        markerSize: 5,
-                        markersAlignment: Alignment.bottomCenter,
-                        markerMargin: const EdgeInsets.only(top: 6),
-                        todayTextStyle: TextStyle(
-                          color: Colors.deepOrange.shade200,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        cellMargin: const EdgeInsets.all(4),
-                        cellPadding: EdgeInsets.zero,
-                        outsideTextStyle: TextStyle(
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      headerStyle: HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                        titleTextStyle: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[200],
-                        ),
-                        leftChevronIcon: Icon(
-                          Icons.chevron_left,
-                          color: Colors.grey[400],
-                          size: 28,
-                        ),
-                        rightChevronIcon: Icon(
-                          Icons.chevron_right,
-                          color: Colors.grey[400],
-                          size: 28,
-                        ),
-                        headerPadding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: const BoxDecoration(),
-                      ),
-                      daysOfWeekStyle: DaysOfWeekStyle(
-                        weekdayStyle: TextStyle(
-                          color: Colors.grey[400],
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                        weekendStyle: TextStyle(
-                          color: Colors.grey[500],
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                        decoration: const BoxDecoration(),
-                      ),
-                      onDaySelected: _onDaySelected,
-                    )
-                  : Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: TableCalendar<BeeTask>(
+              // Calendar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Theme.of(context).brightness == Brightness.dark
+                    ? TableCalendar<BeeTask>(
                         firstDay: DateTime.now().subtract(const Duration(days: 365)),
                         lastDay: DateTime.now().add(const Duration(days: 365)),
                         focusedDay: _focusedDay,
@@ -380,35 +299,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         daysOfWeekHeight: 32,
                         calendarStyle: CalendarStyle(
                           selectedDecoration: BoxDecoration(
-                            color: Colors.orange.shade400,
+                            color: Colors.deepOrange.shade400,
                             shape: BoxShape.circle,
                           ),
                           todayDecoration: BoxDecoration(
-                            color: Colors.orange.shade200.withOpacity(0.3),
+                            color: Colors.deepOrange.shade200.withOpacity(0.3),
                             shape: BoxShape.circle,
                           ),
                           markerDecoration: BoxDecoration(
-                            color: Colors.orange.shade300,
+                            color: Colors.deepOrange.shade300,
                             shape: BoxShape.circle,
                           ),
                           weekendTextStyle: TextStyle(
-                            color: Colors.grey[600],
+                            color: Colors.grey[400],
                           ),
                           holidayTextStyle: TextStyle(
-                            color: Colors.grey[600],
+                            color: Colors.grey[400],
                           ),
                           markersMaxCount: 3,
                           markerSize: 5,
                           markersAlignment: Alignment.bottomCenter,
                           markerMargin: const EdgeInsets.only(top: 6),
                           todayTextStyle: TextStyle(
-                            color: Colors.orange.shade700,
+                            color: Colors.deepOrange.shade200,
                             fontWeight: FontWeight.bold,
                           ),
                           cellMargin: const EdgeInsets.all(4),
                           cellPadding: EdgeInsets.zero,
                           outsideTextStyle: TextStyle(
-                            color: Colors.grey[350],
+                            color: Colors.grey[700],
                           ),
                         ),
                         headerStyle: HeaderStyle(
@@ -417,16 +336,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           titleTextStyle: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[800],
+                            color: Colors.grey[200],
                           ),
                           leftChevronIcon: Icon(
                             Icons.chevron_left,
-                            color: Colors.grey[600],
+                            color: Colors.grey[400],
                             size: 28,
                           ),
                           rightChevronIcon: Icon(
                             Icons.chevron_right,
-                            color: Colors.grey[600],
+                            color: Colors.grey[400],
                             size: 28,
                           ),
                           headerPadding: const EdgeInsets.symmetric(vertical: 8),
@@ -434,7 +353,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                         daysOfWeekStyle: DaysOfWeekStyle(
                           weekdayStyle: TextStyle(
-                            color: Colors.grey[600],
+                            color: Colors.grey[400],
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
@@ -446,40 +365,132 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           decoration: const BoxDecoration(),
                         ),
                         onDaySelected: _onDaySelected,
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: TableCalendar<BeeTask>(
+                          firstDay: DateTime.now().subtract(const Duration(days: 365)),
+                          lastDay: DateTime.now().add(const Duration(days: 365)),
+                          focusedDay: _focusedDay,
+                          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                          calendarFormat: CalendarFormat.month,
+                          eventLoader: _getTaskEventsForCalendar,
+                          startingDayOfWeek: StartingDayOfWeek.monday,
+                          rowHeight: 52,
+                          daysOfWeekHeight: 32,
+                          calendarStyle: CalendarStyle(
+                            selectedDecoration: BoxDecoration(
+                              color: Colors.orange.shade400,
+                              shape: BoxShape.circle,
+                            ),
+                            todayDecoration: BoxDecoration(
+                              color: Colors.orange.shade200.withOpacity(0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            markerDecoration: BoxDecoration(
+                              color: Colors.orange.shade300,
+                              shape: BoxShape.circle,
+                            ),
+                            weekendTextStyle: TextStyle(
+                              color: Colors.grey[600],
+                            ),
+                            holidayTextStyle: TextStyle(
+                              color: Colors.grey[600],
+                            ),
+                            markersMaxCount: 3,
+                            markerSize: 5,
+                            markersAlignment: Alignment.bottomCenter,
+                            markerMargin: const EdgeInsets.only(top: 6),
+                            todayTextStyle: TextStyle(
+                              color: Colors.orange.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            cellMargin: const EdgeInsets.all(4),
+                            cellPadding: EdgeInsets.zero,
+                            outsideTextStyle: TextStyle(
+                              color: Colors.grey[350],
+                            ),
+                          ),
+                          headerStyle: HeaderStyle(
+                            formatButtonVisible: false,
+                            titleCentered: true,
+                            titleTextStyle: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800],
+                            ),
+                            leftChevronIcon: Icon(
+                              Icons.chevron_left,
+                              color: Colors.grey[600],
+                              size: 28,
+                            ),
+                            rightChevronIcon: Icon(
+                              Icons.chevron_right,
+                              color: Colors.grey[600],
+                              size: 28,
+                            ),
+                            headerPadding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: const BoxDecoration(),
+                          ),
+                          daysOfWeekStyle: DaysOfWeekStyle(
+                            weekdayStyle: TextStyle(
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                            weekendStyle: TextStyle(
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                            decoration: const BoxDecoration(),
+                          ),
+                          onDaySelected: _onDaySelected,
+                        ),
                       ),
-                    ),
-            ),
-            // Selected Day Items - combined list
-            if (_selectedDay != null) ...[
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Items for ${DateFormat('MMMM d, y').format(_selectedDay!)}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildCombinedList(_getItemsForDay(_selectedDay!)),
-                  ],
-                ),
               ),
+              // Selected Day Items - combined list
+              if (_selectedDay != null) ...[
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Items for ${DateFormat('MMMM d, y').format(_selectedDay!)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildCombinedList(_getItemsForDay(_selectedDay!)),
+                    ],
+                  ),
+                ),
+              ],
+              // Add some bottom padding
+              const SizedBox(height: 24),
             ],
-            // Add some bottom padding
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
+        floatingActionButton: _isTeamCreator ? FloatingActionButton.extended(
+          onPressed: _showCreateEventDialog,
+          label: const Text('Add Meeting'),
+          icon: const Icon(Icons.add),
+          tooltip: 'Add Meeting',
+        ) : null,
       ),
-      floatingActionButton: _isTeamCreator ? FloatingActionButton.extended(
-        onPressed: _showCreateEventDialog,
-        label: const Text('Add Meeting'),
-        icon: const Icon(Icons.add),
-        tooltip: 'Add Meeting',
-      ) : null,
     );
   }
 

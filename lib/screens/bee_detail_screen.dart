@@ -7,6 +7,7 @@ import 'package:taskhive/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class BeeDetailScreen extends StatefulWidget {
   final String taskId;
@@ -230,40 +231,49 @@ Note: This is an automated notification. Please do not reply to this email.''';
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_task?.title ?? 'Bee Details'),
-        actions: [
-          if (_isTeamCreator) ...[
-            if (_assignedUserEmail != null)
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_task?.title ?? 'Bee Details'),
+          actions: [
+            if (_isTeamCreator) ...[
+              if (_assignedUserEmail != null)
+                IconButton(
+                  icon: _isSendingNotification 
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.notifications_active),
+                  onPressed: _isSendingNotification ? null : _sendTaskNotification,
+                  tooltip: 'Send Task Reminder',
+                ),
               IconButton(
-                icon: _isSendingNotification 
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Icon(Icons.notifications_active),
-                onPressed: _isSendingNotification ? null : _sendTaskNotification,
-                tooltip: 'Send Task Reminder',
+                icon: const Icon(Icons.edit),
+                onPressed: _showEditTaskDialog,
               ),
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: _showEditTaskDialog,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _showDeleteTaskDialog,
-            ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: _showDeleteTaskDialog,
+              ),
+            ],
           ],
-        ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _buildBody(),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildBody(),
     );
   }
 

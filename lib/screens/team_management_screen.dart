@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:taskhive/main.dart';
 import 'package:taskhive/screens/dashboard_screen.dart';
 import 'package:taskhive/utils/logger.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class TeamManagementScreen extends StatefulWidget {
   const TeamManagementScreen({super.key});
@@ -417,26 +419,35 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Team Management'),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          if (_isTeamCreator && _selectedTeamId != null)
-            IconButton(
-              icon: const Icon(Icons.delete_forever),
-              onPressed: () => _disbandTeam(_selectedTeamId!),
-              tooltip: 'Disband Team',
-            ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildBody(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateTeamDialog,
-        child: const Icon(Icons.add),
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Team Management'),
+          centerTitle: true,
+          elevation: 0,
+          actions: [
+            if (_isTeamCreator && _selectedTeamId != null)
+              IconButton(
+                icon: const Icon(Icons.delete_forever),
+                onPressed: () => _disbandTeam(_selectedTeamId!),
+                tooltip: 'Disband Team',
+              ),
+          ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _buildBody(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showCreateTeamDialog,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

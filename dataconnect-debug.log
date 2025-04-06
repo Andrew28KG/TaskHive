@@ -1,0 +1,16 @@
+I0403 13:42:11.037659    9152 load.go:37] Reloading schema and connectors...
+I0403 13:42:11.075546    9152 control.go:71] [/emulator/todoapp 3839] UpdateResources(): done
+Schema: sources: schema\schema.gql [2088B] 
+Connector "default": sources: connector\mutations.gql [1233B] connector\queries.gql [1802B] 
+I0403 13:42:11.106214    9152 codegen.go:82] [connector "default" dartSdk] Generating sources into "C:\\Users\\andre\\Documents\\todo_app\\dataconnect-generated\\dart\\default_connector"
+I0403 13:42:11.107232    9152 dartgen.go:651] Started Dart code generation for connector default
+I0403 13:42:11.110780    9152 collector.go:107] schema extensions wrote into "C:\\Users\\andre\\Documents\\todo_app\\dataconnect\\.dataconnect\\schema"
+Generated sources: prelude.gql [67159B] 
+I0403 13:42:11.114325    9152 collector.go:107] connector "default" dartSdk wrote into "C:\\Users\\andre\\Documents\\todo_app\\dataconnect-generated\\dart\\default_connector"
+Generated sources: README.md [837B] default.dart [578B] 
+I0403 13:42:11.114325    9152 load.go:115] Finished reloading
+I0403 13:42:11.117922    9152 dev.go:95] Listening on address (HTTP + gRPC): 127.0.0.1:9399
+I0403 13:42:11.117922    9152 dev.go:95] Listening on address (HTTP + gRPC): [::1]:9399
+I0403 13:42:13.994265    9152 control.go:71] [/emulator/todoapp 1c6e] UpdateResources(): done
+Schema: sources: schema\schema.gql [2088B] 
+Connector "default": sources: connector\queries.gql [1802B] connector\mutations.gql [1233B] 

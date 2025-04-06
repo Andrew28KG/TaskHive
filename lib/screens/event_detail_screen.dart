@@ -4,6 +4,7 @@ import 'package:taskhive/main.dart';
 import 'package:taskhive/models/event.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final String eventId;
@@ -114,35 +115,46 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Event Details'),
-        actions: [
-          if (_isCreator && !_isLoading)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: _editEvent,
-              tooltip: 'Edit Event',
-            ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _event == null
-              ? const Center(child: Text('Event not found'))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildEventHeader(),
-                      const SizedBox(height: 24),
-                      _buildEventDetails(),
-                      const SizedBox(height: 24),
-                      _buildAttendeesList(),
-                    ],
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Event Details'),
+          actions: [
+            if (_isCreator && !_isLoading)
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: _editEvent,
+                tooltip: 'Edit Event',
+              ),
+          ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _event == null
+                ? const Center(child: Text('Event not found'))
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildEventHeader(),
+                        const SizedBox(height: 24),
+                        _buildEventDetails(),
+                        const SizedBox(height: 24),
+                        _buildAttendeesList(),
+                      ],
+                    ),
                   ),
-                ),
+      ),
     );
   }
   

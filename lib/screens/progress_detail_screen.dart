@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:taskhive/models/bee_task.dart';
 import 'package:intl/intl.dart';
+import 'package:taskhive/main.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class ProgressDetailScreen extends StatefulWidget {
   final String hiveId;
@@ -236,329 +239,338 @@ class _ProgressDetailScreenState extends State<ProgressDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.black
-            : Colors.white,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.only(top: 48, bottom: 16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.deepOrange.shade900
-                    : Colors.orange.shade400,
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(30)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.black26
-                        : Colors.orange.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.arrow_back,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[300]
-                              : Colors.white,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Expanded(
-                        child: Text(
-                          widget.hiveName,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+        body: Container(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.black
+              : Colors.white,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.only(top: 48, bottom: 16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.deepOrange.shade900
+                      : Colors.orange.shade400,
+                  borderRadius:
+                      const BorderRadius.vertical(bottom: Radius.circular(30)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.black26
+                          : Colors.orange.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.arrow_back,
                             color: Theme.of(context).brightness == Brightness.dark
                                 ? Colors.grey[300]
                                 : Colors.white,
                           ),
-                          textAlign: TextAlign.center,
+                          onPressed: () => Navigator.pop(context),
                         ),
-                      ),
-                      const SizedBox(width: 48),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: _isLoading
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).brightness == Brightness.dark
-                              ? Colors.orange[700]!
-                              : Colors.orange[600]!,
-                        ),
-                      ),
-                    )
-                  : _tasks.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.assignment_outlined,
-                                size: 64,
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.grey[700]
-                                    : Colors.grey[300],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No tasks found',
-                                style: TextStyle(
-                                  color: Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Create a task to get started',
-                                style: TextStyle(
-                                  color: Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.grey[600]
-                                      : Colors.grey[500],
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(
-                            left: 16, 
-                            right: 16, 
-                            top: 16, 
-                            bottom: 40 // Increase bottom padding for the entire list
-                          ),
-                          itemCount: _tasks.length + 1, // +1 for statistics card
-                          itemBuilder: (context, index) {
-                            // Statistics card at the top
-                            if (index == 0) {
-                              return _buildStatisticsCard();
-                            }
-                            
-                            // Tasks below with adjusted index
-                            final taskIndex = index - 1;
-                            final task = _tasks[taskIndex];
-                            final isCompleted = task['status'] == 'done';
-                            return Card(
-                              elevation: 2,
-                              margin: const EdgeInsets.only(bottom: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
+                        Expanded(
+                          child: Text(
+                            widget.hiveName,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
                               color: Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.grey[900]
+                                  ? Colors.grey[300]
                                   : Colors.white,
-                              child: InkWell(
-                                onTap: widget.isTeamCreator
-                                    ? () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/task',
-                                          arguments: task['id'],
-                                        );
-                                      }
-                                    : null,
-                                borderRadius: BorderRadius.circular(16),
-                                child: Stack(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Container(
-                                                width: 24,
-                                                height: 24,
-                                                decoration: BoxDecoration(
-                                                  color: Theme.of(context).brightness == Brightness.dark
-                                                      ? Colors.deepOrange[600]
-                                                      : Colors.orange[400],
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    '${taskIndex + 1}',
-                                                    style: TextStyle(
-                                                      color: Theme.of(context).brightness == Brightness.dark
-                                                          ? Colors.black
-                                                          : Colors.black87,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 12,
-                                                    ),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Colors.orange[700]!
+                                : Colors.orange[600]!,
+                          ),
+                        ),
+                      )
+                    : _tasks.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.assignment_outlined,
+                                  size: 64,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.grey[700]
+                                      : Colors.grey[300],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No tasks found',
+                                  style: TextStyle(
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Create a task to get started',
+                                  style: TextStyle(
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.grey[600]
+                                        : Colors.grey[500],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(
+                              left: 16, 
+                              right: 16, 
+                              top: 16, 
+                              bottom: 40 // Increase bottom padding for the entire list
+                            ),
+                            itemCount: _tasks.length + 1, // +1 for statistics card
+                            itemBuilder: (context, index) {
+                              // Statistics card at the top
+                              if (index == 0) {
+                                return _buildStatisticsCard();
+                              }
+                              
+                              // Tasks below with adjusted index
+                              final taskIndex = index - 1;
+                              final task = _tasks[taskIndex];
+                              final isCompleted = task['status'] == 'done';
+                              return Card(
+                                elevation: 2,
+                                margin: const EdgeInsets.only(bottom: 20),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[900]
+                                    : Colors.white,
+                                child: InkWell(
+                                  onTap: widget.isTeamCreator
+                                      ? () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            '/task',
+                                            arguments: task['id'],
+                                          );
+                                        }
+                                      : null,
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Stack(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  width: 24,
+                                                  height: 24,
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context).brightness == Brightness.dark
+                                                        ? Colors.deepOrange[600]
+                                                        : Colors.orange[400],
+                                                    shape: BoxShape.circle,
                                                   ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 4,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: _getStatusColor(task['status'], context).withOpacity(0.1),
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  border: Border.all(
-                                                    color: _getStatusColor(task['status'], context).withOpacity(0.5),
-                                                  ),
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Icon(
-                                                      _getStatusIcon(task['status']),
-                                                      size: 12,
-                                                      color: _getStatusColor(task['status'], context),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      _getStatusLabel(task['status']),
+                                                  child: Center(
+                                                    child: Text(
+                                                      '${taskIndex + 1}',
                                                       style: TextStyle(
-                                                        color: _getStatusColor(task['status'], context),
-                                                        fontSize: 12,
+                                                        color: Theme.of(context).brightness == Brightness.dark
+                                                            ? Colors.black
+                                                            : Colors.black87,
                                                         fontWeight: FontWeight.bold,
+                                                        fontSize: 12,
                                                       ),
                                                     ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Text(
-                                                  task['title'],
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                    decoration: isCompleted
-                                                        ? TextDecoration.lineThrough
-                                                        : null,
-                                                    color: Theme.of(context).brightness == Brightness.dark
-                                                        ? Colors.grey[300]
-                                                        : Colors.grey[800],
                                                   ),
                                                 ),
-                                              ),
-                                              if (widget.isTeamCreator)
-                                                Icon(
-                                                  Icons.edit,
-                                                  color: Theme.of(context).brightness == Brightness.dark
-                                                      ? Colors.grey[500]
-                                                      : Colors.grey[400],
-                                                  size: 16,
+                                                const SizedBox(width: 12),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: _getStatusColor(task['status'], context).withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    border: Border.all(
+                                                      color: _getStatusColor(task['status'], context).withOpacity(0.5),
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        _getStatusIcon(task['status']),
+                                                        size: 12,
+                                                        color: _getStatusColor(task['status'], context),
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        _getStatusLabel(task['status']),
+                                                        style: TextStyle(
+                                                          color: _getStatusColor(task['status'], context),
+                                                          fontSize: 12,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
-                                            ],
-                                          ),
-                                          if (task['description'] != null) ...[
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              task['description'],
-                                              style: TextStyle(
-                                                color: Theme.of(context).brightness == Brightness.dark
-                                                    ? Colors.grey[400]
-                                                    : Colors.grey[600],
-                                                fontSize: 14,
-                                              ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Text(
+                                                    task['title'],
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.bold,
+                                                      decoration: isCompleted
+                                                          ? TextDecoration.lineThrough
+                                                          : null,
+                                                      color: Theme.of(context).brightness == Brightness.dark
+                                                          ? Colors.grey[300]
+                                                          : Colors.grey[800],
+                                                    ),
+                                                  ),
+                                                ),
+                                                if (widget.isTeamCreator)
+                                                  Icon(
+                                                    Icons.edit,
+                                                    color: Theme.of(context).brightness == Brightness.dark
+                                                        ? Colors.grey[500]
+                                                        : Colors.grey[400],
+                                                    size: 16,
+                                                  ),
+                                              ],
                                             ),
-                                          ],
-                                          const SizedBox(height: 8),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
+                                            if (task['description'] != null) ...[
+                                              const SizedBox(height: 8),
                                               Text(
-                                                'Created: ${DateFormat('MMM d, y').format(task['createdAt'])}',
+                                                task['description'],
                                                 style: TextStyle(
                                                   color: Theme.of(context).brightness == Brightness.dark
-                                                      ? Colors.grey[500]
+                                                      ? Colors.grey[400]
                                                       : Colors.grey[600],
-                                                  fontSize: 12,
+                                                  fontSize: 14,
                                                 ),
                                               ),
-                                              if (task['dueDate'] != null)
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.event,
-                                                      size: 12,
-                                                      color: _isDueOrOverdue(task) 
-                                                          ? Colors.red[400]
-                                                          : Theme.of(context).brightness == Brightness.dark
-                                                              ? Colors.grey[400]
-                                                              : Colors.grey[600],
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      'Due: ${DateFormat('MMM d, y').format(task['dueDate'])}',
-                                                      style: TextStyle(
-                                                        color: _isDueOrOverdue(task)
+                                            ],
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text(
+                                                  'Created: ${DateFormat('MMM d, y').format(task['createdAt'])}',
+                                                  style: TextStyle(
+                                                    color: Theme.of(context).brightness == Brightness.dark
+                                                        ? Colors.grey[500]
+                                                        : Colors.grey[600],
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                                if (task['dueDate'] != null)
+                                                  Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.event,
+                                                        size: 12,
+                                                        color: _isDueOrOverdue(task) 
                                                             ? Colors.red[400]
                                                             : Theme.of(context).brightness == Brightness.dark
                                                                 ? Colors.grey[400]
                                                                 : Colors.grey[600],
-                                                        fontSize: 12,
-                                                        fontWeight: _isDueOrOverdue(task) ? FontWeight.bold : FontWeight.normal,
                                                       ),
-                                                    ),
-                                                  ],
-                                                ),
-                                            ],
-                                          ),
-                                          if (task['completedAt'] != null) ...[
-                                            const SizedBox(height: 4),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.end,
-                                              children: [
-                                                Icon(
-                                                  Icons.check_circle_outline,
-                                                  size: 12,
-                                                  color: Theme.of(context).brightness == Brightness.dark
-                                                      ? Colors.green[400]
-                                                      : Colors.green[600],
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  'Completed: ${DateFormat('MMM d, y').format(task['completedAt'])}',
-                                                  style: TextStyle(
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        'Due: ${DateFormat('MMM d, y').format(task['dueDate'])}',
+                                                        style: TextStyle(
+                                                          color: _isDueOrOverdue(task)
+                                                              ? Colors.red[400]
+                                                              : Theme.of(context).brightness == Brightness.dark
+                                                                  ? Colors.grey[400]
+                                                                  : Colors.grey[600],
+                                                          fontSize: 12,
+                                                          fontWeight: _isDueOrOverdue(task) ? FontWeight.bold : FontWeight.normal,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                              ],
+                                            ),
+                                            if (task['completedAt'] != null) ...[
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
+                                                  Icon(
+                                                    Icons.check_circle_outline,
+                                                    size: 12,
                                                     color: Theme.of(context).brightness == Brightness.dark
                                                         ? Colors.green[400]
                                                         : Colors.green[600],
-                                                    fontSize: 12,
                                                   ),
-                                                ),
-                                              ],
-                                            ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    'Completed: ${DateFormat('MMM d, y').format(task['completedAt'])}',
+                                                    style: TextStyle(
+                                                      color: Theme.of(context).brightness == Brightness.dark
+                                                          ? Colors.green[400]
+                                                          : Colors.green[600],
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
                                           ],
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-            ),
-          ],
+                              );
+                            },
+                          ),
+              ),
+            ],
+          ),
         ),
       ),
     );

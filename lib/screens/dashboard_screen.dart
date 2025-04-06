@@ -16,6 +16,7 @@ import 'package:taskhive/screens/progress_screen.dart';
 import 'package:clipboard/clipboard.dart';
 import 'dart:async';
 import 'package:taskhive/screens/notification_list_screen.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String? teamId;
@@ -35,6 +36,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isTeamCreator = false;
   int _inAppNotificationCount = 0;
   late Timer _refreshTimer;
+  // Track back button presses for exit confirmation
+  DateTime? _lastBackPressTime;
 
   @override
   void initState() {
@@ -196,12 +199,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final screens = [
@@ -214,175 +211,194 @@ class _DashboardScreenState extends State<DashboardScreen> {
       const ProfileScreen(),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('TaskHive'),
-        actions: [
-          // In-app notifications
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const NotificationListScreen(),
-                    ),
-                  ).then((_) {
-                    // Check for unread notifications
-                    _checkUnreadNotifications();
-                    
-                    // To be extra sure UI is in sync, set count to 0 after a short delay 
-                    // since notifications should have been marked as read
-                    Future.delayed(Duration(milliseconds: 500), () {
-                      if (mounted) {
-                        setState(() {
-                          _inAppNotificationCount = 0;
-                        });
-                      }
-                    });
-                  });
-                },
-                tooltip: 'Notifications',
-              ),
-              if (_inAppNotificationCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      _inAppNotificationCount.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+    return BackNavigationHandler.wrapDashboard(
+      selectedIndex: _selectedIndex,
+      onTabChange: (index) {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      context: context,
+      lastBackPressTime: _lastBackPressTime,
+      setLastBackPressTime: (time) {
+        setState(() {
+          _lastBackPressTime = time;
+        });
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('TaskHive'),
+          actions: [
+            // In-app notifications
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NotificationListScreen(),
                       ),
-                      textAlign: TextAlign.center,
+                    ).then((_) {
+                      // Check for unread notifications
+                      _checkUnreadNotifications();
+                      
+                      // To be extra sure UI is in sync, set count to 0 after a short delay 
+                      // since notifications should have been marked as read
+                      Future.delayed(Duration(milliseconds: 500), () {
+                        if (mounted) {
+                          setState(() {
+                            _inAppNotificationCount = 0;
+                          });
+                        }
+                      });
+                    });
+                  },
+                  tooltip: 'Notifications',
+                ),
+                if (_inAppNotificationCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        _inAppNotificationCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
+              ],
+            ),
+            
+            if (_currentTeamId != null && _isTeamCreator) ...[
+              IconButton(
+                icon: const Icon(Icons.key),
+                onPressed: _showTeamCodeDialog,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_forever),
+                onPressed: _showDisbandTeamDialog,
+                tooltip: 'Disband Team',
+              ),
+            ],
+            IconButton(
+              icon: const Icon(Icons.group),
+              onPressed: () async {
+                final result = await Navigator.pushNamed(
+                  context,
+                  '/team',
+                );
+                if (result != null && result is String) {
+                  setState(() {
+                    _currentTeamId = result;
+                  });
+                  await _loadData();
+                }
+              },
+            ),
+          ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : screens[_selectedIndex],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: Theme.of(context).brightness == Brightness.dark
+                  ? [
+                      const Color(0xFF1E1E1E),
+                      Colors.black.withOpacity(0.9),
+                    ]
+                  : [
+                      Colors.white,
+                      Colors.grey.shade50,
+                    ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.black26
+                    : Colors.grey.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
             ],
           ),
-          
-          if (_currentTeamId != null && _isTeamCreator) ...[
-            IconButton(
-              icon: const Icon(Icons.key),
-              onPressed: _showTeamCodeDialog,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_forever),
-              onPressed: _showDisbandTeamDialog,
-              tooltip: 'Disband Team',
-            ),
-          ],
-          IconButton(
-            icon: const Icon(Icons.group),
-            onPressed: () async {
-              final result = await Navigator.pushNamed(
-                context,
-                '/team',
-              );
-              if (result != null && result is String) {
-                setState(() {
-                  _currentTeamId = result;
-                });
-                await _loadData();
-              }
+          child: NavigationBar(
+            height: 65,
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
             },
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            animationDuration: const Duration(milliseconds: 400),
+            destinations: [
+              _buildNavDestination(
+                context,
+                Icons.home_outlined,
+                Icons.home,
+                'Home',
+                0,
+              ),
+              _buildNavDestination(
+                context,
+                Icons.calendar_month_outlined,
+                Icons.calendar_month,
+                'Calendar',
+                1,
+              ),
+              _buildNavDestination(
+                context,
+                Icons.analytics_outlined,
+                Icons.analytics,
+                'Progress',
+                2,
+              ),
+              _buildNavDestination(
+                context,
+                Icons.timer_outlined,
+                Icons.timer,
+                'Focus',
+                3,
+              ),
+              _buildNavDestination(
+                context,
+                Icons.person_outline,
+                Icons.person,
+                'Profile',
+                4,
+              ),
+            ],
           ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: Theme.of(context).brightness == Brightness.dark
-                ? [
-                    const Color(0xFF1E1E1E),
-                    Colors.black.withOpacity(0.9),
-                  ]
-                : [
-                    Colors.white,
-                    Colors.grey.shade50,
-                  ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black26
-                  : Colors.grey.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
         ),
-        child: NavigationBar(
-          height: 65,
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: _onItemTapped,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          animationDuration: const Duration(milliseconds: 400),
-          destinations: [
-            _buildNavDestination(
-              context,
-              Icons.home_outlined,
-              Icons.home,
-              'Home',
-              0,
-            ),
-            _buildNavDestination(
-              context,
-              Icons.calendar_month_outlined,
-              Icons.calendar_month,
-              'Calendar',
-              1,
-            ),
-            _buildNavDestination(
-              context,
-              Icons.analytics_outlined,
-              Icons.analytics,
-              'Progress',
-              2,
-            ),
-            _buildNavDestination(
-              context,
-              Icons.timer_outlined,
-              Icons.timer,
-              'Focus',
-              3,
-            ),
-            _buildNavDestination(
-              context,
-              Icons.person_outline,
-              Icons.person,
-              'Profile',
-              4,
-            ),
-          ],
-        ),
+        floatingActionButton: _selectedIndex == 0 && _isTeamCreator
+            ? FloatingActionButton(
+                onPressed: _showCreateProjectDialog,
+                child: const Icon(Icons.add),
+              )
+            : null,
       ),
-      floatingActionButton: _selectedIndex == 0 && _isTeamCreator
-          ? FloatingActionButton(
-              onPressed: _showCreateProjectDialog,
-              child: const Icon(Icons.add),
-            )
-          : null,
     );
   }
 

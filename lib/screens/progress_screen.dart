@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:taskhive/main.dart';
 import 'package:intl/intl.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -231,249 +232,217 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Theme.of(context).brightness == Brightness.dark
-          ? Colors.black
-          : Colors.white,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.deepOrange.shade900
-                  : Colors.orange.shade400,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.black26
-                      : Colors.orange.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text(
-                'Progress',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _hives.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        // Return to home tab when back is pressed
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _loadHives,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: _buildTeamStats(),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
                           children: [
-                            Icon(
-                              Icons.hive,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No hives found',
+                            const Text(
+                              'Hives Progress',
                               style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 18,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Create a new hive to start tracking progress',
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 14,
-                              ),
+                            const Spacer(),
+                            FilledButton.tonal(
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/all-hives');
+                              },
+                              child: const Text('View All'),
                             ),
                           ],
                         ),
-                      )
-                    : SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            _buildTeamStats(),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _hives.length,
-                              itemBuilder: (context, index) {
-                                final hive = _hives[index];
-                                return Card(
-                                  elevation: 2,
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    _hives.isEmpty
+                        ? SliverFillRemaining(
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.hive,
+                                    size: 64,
+                                    color: Colors.grey[400],
                                   ),
-                                  child: InkWell(
-                                    onTap: () {
-                                      Navigator.pushNamed(
-                                        context,
-                                        '/progress-detail',
-                                        arguments: {
-                                          'hiveId': hive['id'],
-                                          'hiveName': hive['name'],
-                                          'isTeamCreator': _isTeamCreator,
-                                        },
-                                      );
-                                    },
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.all(8),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.orange.withOpacity(0.1),
-                                                  borderRadius: BorderRadius.circular(8),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No hives found',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Create a new hive to start tracking progress',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : SliverPadding(
+                            padding: const EdgeInsets.all(16),
+                            sliver: SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final hive = _hives[index];
+                                  return Card(
+                                    elevation: 2,
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: InkWell(
+                                      onTap: () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          '/progress-detail',
+                                          arguments: {
+                                            'hiveId': hive['id'],
+                                            'hiveName': hive['name'],
+                                            'isTeamCreator': _isTeamCreator,
+                                          },
+                                        );
+                                      },
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.orange.withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.hive,
+                                                    color: Colors.orange[700],
+                                                  ),
                                                 ),
-                                                child: Icon(
-                                                  Icons.hive,
-                                                  color: Colors.orange[700],
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      hive['name'],
-                                                      style: const TextStyle(
-                                                        fontSize: 18,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    if (hive['description'] != null) ...[
-                                                      const SizedBox(height: 4),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
                                                       Text(
-                                                        hive['description'],
-                                                        style: TextStyle(
-                                                          color: Colors.grey[600],
-                                                          fontSize: 14,
+                                                        hive['name'],
+                                                        style: const TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight: FontWeight.bold,
                                                         ),
                                                       ),
+                                                      if (hive['description'] != null && hive['description'].isNotEmpty) ...[
+                                                        const SizedBox(height: 4),
+                                                        Text(
+                                                          hive['description'],
+                                                          style: TextStyle(
+                                                            color: Colors.grey[600],
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ],
-                                                  ],
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(10),
-                                                  child: LinearProgressIndicator(
-                                                    value: hive['progress'],
-                                                    minHeight: 8,
-                                                    backgroundColor: Theme.of(context).brightness == Brightness.dark
-                                                        ? Colors.grey[800]
-                                                        : Colors.grey[200],
-                                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                                      Theme.of(context).brightness == Brightness.dark
-                                                          ? Colors.deepOrange.shade300
-                                                          : Colors.amber.shade700,
+                                              ],
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: ClipRRect(
+                                                    borderRadius: BorderRadius.circular(10),
+                                                    child: LinearProgressIndicator(
+                                                      value: hive['progress'],
+                                                      minHeight: 8,
+                                                      backgroundColor: Theme.of(context).brightness == Brightness.dark
+                                                          ? Colors.grey[800]
+                                                          : Colors.grey[200],
+                                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                                        Theme.of(context).brightness == Brightness.dark
+                                                            ? Colors.deepOrange.shade300
+                                                            : Colors.amber.shade700,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                              const SizedBox(width: 16),
-                                              Text(
-                                                '${(hive['progress'] * 100).round()}%',
-                                                style: TextStyle(
-                                                  color: Theme.of(context).brightness == Brightness.dark
-                                                      ? Colors.deepOrange.shade300
-                                                      : Colors.amber.shade700,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                '${hive['completedTasks']} of ${hive['totalTasks']} tasks completed',
-                                                style: TextStyle(
-                                                  color: Colors.grey[600],
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                              if (hive['lastActivity'] != null)
+                                                const SizedBox(width: 16),
                                                 Text(
-                                                  'Last activity: ${DateFormat('MMM d').format(hive['lastActivity'])}',
+                                                  '${(hive['progress'] * 100).round()}%',
+                                                  style: TextStyle(
+                                                    color: Theme.of(context).brightness == Brightness.dark
+                                                        ? Colors.deepOrange.shade300
+                                                        : Colors.amber.shade700,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text(
+                                                  '${hive['completedTasks']} of ${hive['totalTasks']} tasks completed',
                                                   style: TextStyle(
                                                     color: Colors.grey[600],
                                                     fontSize: 12,
                                                   ),
                                                 ),
-                                            ],
-                                          ),
-                                          if (hive['overdueTasks'] > 0) ...[
-                                            const SizedBox(height: 8),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red.withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(
-                                                  color: Colors.red.withOpacity(0.3),
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.warning,
-                                                    size: 16,
-                                                    color: Colors.red[700],
-                                                  ),
-                                                  const SizedBox(width: 4),
+                                                if (hive['lastActivity'] != null)
                                                   Text(
-                                                    '${hive['overdueTasks']} overdue tasks',
+                                                    'Last activity: ${DateFormat('MMM d').format(hive['lastActivity'])}',
                                                     style: TextStyle(
-                                                      color: Colors.red[700],
+                                                      color: Colors.grey[600],
                                                       fontSize: 12,
-                                                      fontWeight: FontWeight.bold,
                                                     ),
                                                   ),
-                                                ],
-                                              ),
+                                              ],
                                             ),
                                           ],
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                                childCount: _hives.length,
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
-          ),
-        ],
+                          ),
+                  ],
+                ),
+              ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:taskhive/models/bee_task.dart';
 import 'package:taskhive/screens/bee_detail_screen.dart';
 import 'package:taskhive/theme/app_theme.dart';
 import 'package:intl/intl.dart';
+import 'package:taskhive/utils/navigation_utils.dart';
 
 class HiveDetailScreen extends StatefulWidget {
   final String projectId;
@@ -94,31 +95,40 @@ class _HiveDetailScreenState extends State<HiveDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_project?.name ?? 'Hive Details'),
-        actions: [
-          if (_isTeamCreator) ...[
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: _showEditProjectDialog,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _showDeleteHiveDialog,
-            ),
+    return BackNavigationHandler.wrapWithPopScope(
+      onBackPress: () {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_project?.name ?? 'Hive Details'),
+          actions: [
+            if (_isTeamCreator) ...[
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: _showEditProjectDialog,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: _showDeleteHiveDialog,
+              ),
+            ],
           ],
-        ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _buildBody(),
+        floatingActionButton: _isTeamCreator
+            ? FloatingActionButton(
+                onPressed: _showCreateTaskDialog,
+                child: const Icon(Icons.add),
+              )
+            : null,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildBody(),
-      floatingActionButton: _isTeamCreator
-          ? FloatingActionButton(
-              onPressed: _showCreateTaskDialog,
-              child: const Icon(Icons.add),
-            )
-          : null,
     );
   }
 
