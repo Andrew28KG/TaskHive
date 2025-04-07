@@ -1716,19 +1716,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   ? proposedEndDateTime.add(const Duration(days: 1))
                                   : proposedEndDateTime;
                               
+                              // Verify event duration doesn't exceed 5 hours
                               final duration = adjustedEndDateTime.difference(startDateTime);
-                              
-                              if (duration.inHours > 5) {
-                                // Show error inside dialog instead of snackbar
+                              if (duration.inMinutes > 300) { // 5 hours = 300 minutes
                                 setState(() {
                                   errorMessage = 'Meeting duration cannot exceed 5 hours';
                                 });
-                              } else {
-                                setState(() {
-                                  errorMessage = null; // Clear any previous error
-                                  endTime = time;
-                                });
+                                return;
                               }
+                              
+                              setState(() {
+                                errorMessage = null; // Clear any previous error
+                                endTime = time;
+                              });
                             }
                           },
                         ),
@@ -1861,7 +1861,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     
                     // Verify event duration doesn't exceed 5 hours
                     final duration = adjustedEndDateTime.difference(startDateTime);
-                    if (duration.inHours > 5) {
+                    if (duration.inMinutes > 300) { // 5 hours = 300 minutes
                       setState(() {
                         errorMessage = 'Meeting duration cannot exceed 5 hours';
                       });
