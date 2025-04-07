@@ -22,6 +22,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:taskhive/screens/tutorial_screen.dart';
 import 'package:taskhive/screens/about_screen.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:taskhive/screens/upcoming_tasks_page.dart';
+import 'package:taskhive/screens/team_info_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String? teamId;
@@ -214,9 +216,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       const FocusScreen(),
     ];
 
-    return BackNavigationHandler.wrapWithPopScope(
-      onBackPress: () {
-        // Handle back button press to confirm exit
+    return WillPopScope(
+      onWillPop: () async {
+        // If not on the Home screen, go to home first
+        if (_selectedIndex != 0) {
+          setState(() {
+            _selectedIndex = 0; // Switch to home tab
+          });
+          return false; // Prevent app exit
+        }
+        
+        // If already on Home screen, implement double-back to exit behavior
         final now = DateTime.now();
         if (_lastBackPressTime == null || 
             now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
@@ -229,7 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
           return false;
         }
-        return true;
+        return true; // Allow app exit on second press
       },
       child: Scaffold(
         appBar: AppBar(
@@ -380,6 +390,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildDashboard() {
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildWelcomeSection(),
+            const SizedBox(height: 24),
+            _buildStatsSection(),
+            const SizedBox(height: 24),
+            _buildProjectsSection(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWelcomeSection() {
     // Get current user's name
     final currentUser = FirebaseAuth.instance.currentUser;
     final userName = currentUser?.displayName ?? 'User';
@@ -437,47 +466,122 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatCard(
-                        'Active Hives',
-                        _projects.length.toString(),
-                        Icons.hive,
-                        Colors.amber,
-                      ),
-                      _buildStatCard(
-                        'Busy Bees',
-                        _tasks.where((t) => t.status == BeeStatus.inProgress).length.toString(),
-                        Icons.local_florist,
-                        Colors.green,
-                      ),
-                      _buildStatCard(
-                        'To Do',
-                        _tasks.where((t) => t.status == BeeStatus.todo).length.toString(),
-                        Icons.emoji_nature,
-                        Colors.orange,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildProjectsSection(),
-              const SizedBox(height: 24),
-              _buildTeamMembersSection(),
             ],
           ),
         );
       }
+    );
+  }
+
+  Widget _buildStatsSection() {
+    // Filter tasks assigned to current user and sort by due date
+    final upcomingTasks = _tasks
+        .where((task) => task.assignedTo == currentUserId)
+        .where((task) => task.dueDate != null)
+        .toList()
+      ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatCard(
+                  'Active Hives',
+                  _projects.length.toString(),
+                  Icons.hive,
+                  Colors.amber,
+                ),
+                _buildStatCard(
+                  'Busy Bees',
+                  _tasks.where((t) => t.status == BeeStatus.inProgress).length.toString(),
+                  Icons.local_florist,
+                  Colors.green,
+                ),
+                _buildStatCard(
+                  'To Do',
+                  _tasks.where((t) => t.status == BeeStatus.todo).length.toString(),
+                  Icons.emoji_nature,
+                  Colors.orange,
+                ),
+              ],
+            ),
+            if (upcomingTasks.isNotEmpty) ...[
+              const Divider(height: 32),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Upcoming Tasks',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _showUpcomingTasksPage(upcomingTasks),
+                        icon: const Icon(Icons.arrow_forward),
+                        label: const Text('View All'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: upcomingTasks.length > 3 ? 3 : upcomingTasks.length,
+                    itemBuilder: (context, index) {
+                      final task = upcomingTasks[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _getPriorityColor(task.priority).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            _getPriorityIcon(task.priority),
+                            color: _getPriorityColor(task.priority),
+                          ),
+                        ),
+                        title: Text(
+                          task.title,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        subtitle: Text(
+                          DateFormat('MMM d, y').format(task.dueDate!),
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BeeDetailScreen(taskId: task.id),
+                            ),
+                          ).then((_) => _loadData());
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -513,6 +617,144 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildUpcomingTasksSection() {
+    final upcomingTasks = _tasks
+        .where((task) => task.assignedTo == currentUserId)
+        .where((task) => task.status != BeeStatus.done)
+        .toList()
+      ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
+
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Upcoming Tasks',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (context) => SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.8,
+                        child: UpcomingTasksPage(
+                          tasks: _tasks,
+                          onTaskUpdated: _loadData,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('View All'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (upcomingTasks.isEmpty)
+              Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.task_alt,
+                      size: 48,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No upcoming tasks',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Column(
+                children: upcomingTasks.take(3).map((task) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _getPriorityColor(task.priority).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            _getPriorityIcon(task.priority),
+                            color: _getPriorityColor(task.priority),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                task.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (task.dueDate != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  DateFormat('MMM d, y').format(task.dueDate!),
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showUpcomingTasksPage(List<BeeTask> tasks) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        maxChildSize: 0.9,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (context, scrollController) => UpcomingTasksPage(
+          tasks: tasks,
+          onTaskUpdated: _loadData,
+        ),
+      ),
     );
   }
 
@@ -1797,6 +2039,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const Padding(
             padding: EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
             child: Text('TEAM', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('Team Info'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TeamInfoPage(),
+                ),
+              );
+            },
           ),
           
           ListTile(

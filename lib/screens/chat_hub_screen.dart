@@ -359,167 +359,95 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
   
   @override
   Widget build(BuildContext context) {
-    return BackNavigationHandler.wrapWithPopScope(
-      onBackPress: () {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        
+        // Return to home tab when back is pressed
         if (Navigator.canPop(context)) {
           Navigator.pop(context);
-          return true;
         }
-        return false;
       },
       child: Scaffold(
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _hasError
-                ? _buildErrorView()
-                : RefreshIndicator(
-                    onRefresh: _loadTaskDiscussions,
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        // Header with title and gradient background
-                        SliverToBoxAdapter(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.deepOrange.shade900
-                                  : Colors.orange.shade400,
-                              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.black26
-                                      : Colors.orange.withOpacity(0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Discussions',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
-                                  color: Colors.white,
-                                ),
-                              ),
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.red[300],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red[400],
                             ),
                           ),
-                        ),
-                        // Team Chat Section
-                        SliverToBoxAdapter(
-                          child: _buildTeamChat(),
-                        ),
-                        // Pinned Chats Section
-                        _buildPinnedChatsSection(),
-                        // Hive Discussions Section
-                        _buildHiveDiscussionsSection(),
-                        // Add extra space at the bottom to prevent content from being covered by navigation
-                        SliverToBoxAdapter(
-                          child: const SizedBox(height: 100),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            _errorMessage,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            onPressed: _loadTeamData,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
                     ),
+                  )
+                : CustomScrollView(
+                    slivers: [
+                      // Chat Header
+                      SliverAppBar(
+                        expandedHeight: 80,
+                        pinned: true,
+                        elevation: 0,
+                        backgroundColor: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.deepOrange.shade900
+                          : Colors.orange.shade400,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(30),
+                            bottomRight: Radius.circular(30),
+                          ),
+                        ),
+                        flexibleSpace: FlexibleSpaceBar(
+                          title: Text(
+                            'Team Chat',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                              color: Colors.white,
+                            ),
+                          ),
+                          centerTitle: true,
+                        ),
+                      ),
+                      _buildPinnedChats(),
+                      _buildGroupedChats(),
+                    ],
                   ),
       ),
     );
   }
   
-  Widget _buildTeamChat() {
-    // Find the main chat
-    final mainChat = _taskDiscussions.firstWhere(
-      (task) => task.status == 'main',
-      orElse: () => _taskDiscussions.first,
-    );
-    
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DiscussionScreen(
-                taskId: mainChat.taskId,
-                taskTitle: "Team Chat",
-              ),
-            ),
-          ).then((_) => _loadTaskDiscussions());
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: Theme.of(context).brightness == Brightness.dark
-                ? [Colors.amber.shade900, Colors.deepOrange.shade900]
-                : [Colors.amber.shade300, Colors.orange.shade400],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.amber.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.forum,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Team Discussion',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Chat with your entire team in one place',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.white,
-                size: 20,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildPinnedChatsSection() {
+  Widget _buildPinnedChats() {
     // Get pinned tasks
     final pinnedTasks = _taskDiscussions
       .where((task) => _pinnedTaskIds.contains(task.taskId) && task.status != 'main')
@@ -560,7 +488,7 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
     );
   }
   
-  Widget _buildHiveDiscussionsSection() {
+  Widget _buildGroupedChats() {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
@@ -835,48 +763,6 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
     } else {
       return DateFormat('MMM d, y').format(dateTime);
     }
-  }
-  
-  Widget _buildErrorView() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red.shade300,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Something went wrong',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.red.shade800,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _errorMessage,
-              style: TextStyle(
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadTeamData,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

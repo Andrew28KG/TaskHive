@@ -128,7 +128,7 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 TaskHive takes security seriously:
 
 - Authentication is handled through Firebase Authentication
-- Session persistence enables seamless app experience
+- Session persistence enables seamless app experience while requiring team selection on restart for enhanced security
 - All data is stored securely in Firebase Cloud Firestore
 - Sensitive API keys and configuration files are not included in the public repository
 - User passwords are never stored in plain text
@@ -138,6 +138,7 @@ TaskHive takes security seriously:
 
 ## Recent Updates
 
+- Added enhanced security with team selection on each app restart
 - Improved navigation with bottom bar and drawer menu
 - Implemented persistent login for seamless user experience
 - Simplified UI with consistent design language

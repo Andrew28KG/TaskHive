@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:taskhive/main.dart'; // Add this import for currentUserId
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -34,6 +35,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Set persistence to LOCAL for this session
+      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+      
       // Create user account
       final userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
@@ -52,18 +56,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Sign out the user so they have to log in again
-      await FirebaseAuth.instance.signOut();
+      // Update global currentUserId
+      currentUserId = userCredential.user!.uid;
 
       if (mounted) {
-        // Show success message and navigate to login
+        // Show success message and navigate to team selection screen
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Please log in.'),
+            content: Text('Registration successful! Now join or create a team.'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pushReplacementNamed('/login');
+        Navigator.of(context).pushReplacementNamed('/team');
       }
     } on FirebaseAuthException catch (e) {
       String message;

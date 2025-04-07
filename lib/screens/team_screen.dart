@@ -19,6 +19,29 @@ class _TeamScreenState extends State<TeamScreen> {
   final _teamCodeController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Reset the current team ID when this screen loads
+    _resetCurrentTeam();
+  }
+
+  // Reset the user's current team ID to force team selection
+  Future<void> _resetCurrentTeam() async {
+    try {
+      if (currentUserId != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUserId)
+            .update({
+          'currentTeamId': null,
+        });
+      }
+    } catch (e) {
+      print('Error resetting current team: $e');
+    }
+  }
+
+  @override
   void dispose() {
     _teamNameController.dispose();
     _teamDescriptionController.dispose();

@@ -250,41 +250,37 @@ class _CalendarScreenState extends State<CalendarScreen> {
         return false;
       },
       child: Scaffold(
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Calendar Header
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.deepOrange.shade900
-                      : Colors.orange.shade400,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.black26
-                          : Colors.orange.withOpacity(0.2),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    'Calendar',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      color: Colors.white,
-                    ),
-                  ),
+        body: CustomScrollView(
+          slivers: [
+            // Calendar Header
+            SliverAppBar(
+              expandedHeight: 80,
+              pinned: true,
+              elevation: 0,
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.deepOrange.shade900
+                : Colors.orange.shade400,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
                 ),
               ),
-              // Calendar
-              Padding(
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  'Calendar',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: Colors.white,
+                  ),
+                ),
+                centerTitle: true,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Theme.of(context).brightness == Brightness.dark
                     ? TableCalendar<BeeTask>(
@@ -449,7 +445,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               fontSize: 13,
                             ),
                             weekendStyle: TextStyle(
-                              color: Colors.grey[500],
+                              color: Colors.grey[700],
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
                             ),
@@ -459,30 +455,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                       ),
               ),
-              // Selected Day Items - combined list
-              if (_selectedDay != null) ...[
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Items for ${DateFormat('MMMM d, y').format(_selectedDay!)}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildCombinedList(_getItemsForDay(_selectedDay!)),
-                    ],
-                  ),
-                ),
-              ],
-              // Add some bottom padding
-              const SizedBox(height: 24),
-            ],
-          ),
+            ),
+            // Tasks for selected day
+            SliverToBoxAdapter(
+              child: _buildSelectedDayTasks(),
+            ),
+          ],
         ),
         floatingActionButton: _isTeamCreator ? FloatingActionButton.extended(
           onPressed: _showCreateEventDialog,
@@ -1369,6 +1347,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
+  Widget _buildSelectedDayTasks() {
+    if (_selectedDay == null) {
+      return const SizedBox.shrink();
+    }
+    
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Items for ${DateFormat('MMMM d, y').format(_selectedDay!)}',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildCombinedList(_getItemsForDay(_selectedDay!)),
+          // Add some bottom padding
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
   Future<void> _showCreateEventDialog() async {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
@@ -1385,6 +1389,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     List<String> selectedAttendees = [];
     List<Map<String, dynamic>> teamMembers = [];
     bool isOnlineMeeting = true;
+    String? errorMessage;
     
     // Load team members
     try {
@@ -1442,6 +1447,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Error message display
+                  if (errorMessage != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              errorMessage!,
+                              style: TextStyle(color: Colors.red.shade700),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   TextField(
                     controller: titleController,
                     decoration: const InputDecoration(
@@ -1689,17 +1719,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               final duration = adjustedEndDateTime.difference(startDateTime);
                               
                               if (duration.inHours > 5) {
-                                // Show error dialog if duration exceeds 5 hours
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Meeting duration cannot exceed 5 hours'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
+                                // Show error inside dialog instead of snackbar
+                                setState(() {
+                                  errorMessage = 'Meeting duration cannot exceed 5 hours';
+                                });
                               } else {
                                 setState(() {
+                                  errorMessage = null; // Clear any previous error
                                   endTime = time;
                                 });
                               }
@@ -1804,9 +1830,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ElevatedButton(
                 onPressed: () async {
                   if (titleController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a meeting title')),
-                    );
+                    setState(() {
+                      errorMessage = 'Please enter a meeting title';
+                    });
                     return;
                   }
                   
@@ -1836,12 +1862,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     // Verify event duration doesn't exceed 5 hours
                     final duration = adjustedEndDateTime.difference(startDateTime);
                     if (duration.inHours > 5) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Meeting duration cannot exceed 5 hours'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                      setState(() {
+                        errorMessage = 'Meeting duration cannot exceed 5 hours';
+                      });
                       return;
                     }
                     

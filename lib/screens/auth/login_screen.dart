@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:taskhive/main.dart';
 import 'package:taskhive/screens/auth/register_screen.dart';
 import 'package:taskhive/utils/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,12 +20,24 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _rememberMe = false;
 
   @override
   void initState() {
     super.initState();
-    // No longer auto-redirecting users
-    // _checkCurrentUser();
+    _loadRememberMeSetting();
+  }
+
+  Future<void> _loadRememberMeSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _rememberMe = prefs.getBool('rememberMe') ?? false;
+      
+      // If remember me was checked, load the saved email
+      if (_rememberMe) {
+        _emailController.text = prefs.getString('savedEmail') ?? '';
+      }
+    });
   }
 
   // We're no longer auto-redirecting users, they must log in explicitly
@@ -73,6 +86,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       logger.info('Attempting to sign in with email: ${_emailController.text}');
       
+      // Ensure persistence is set to LOCAL for current session
+      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+      
       final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -80,6 +96,15 @@ class _LoginScreenState extends State<LoginScreen> {
       
       currentUserId = userCredential.user!.uid;
       logger.info('User logged in successfully with ID: $currentUserId');
+      
+      // Save the remember me preference for email auto-fill
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('rememberMe', _rememberMe);
+      
+      // Store email for auto-fill if remember me is checked
+      if (_rememberMe) {
+        await prefs.setString('savedEmail', _emailController.text.trim());
+      }
       
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil('/team', (route) => false);
@@ -308,6 +333,35 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
+                    const SizedBox(height: 8),
+                    // Remember me checkbox
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _rememberMe,
+                          onChanged: (value) {
+                            setState(() {
+                              _rememberMe = value ?? false;
+                            });
+                          },
+                        ),
+                        const Text('Remember me'),
+                        Tooltip(
+                          message: 'Remember email for future logins',
+                          child: Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const Spacer(),
+                        // Forgot password button
+                        TextButton(
+                          onPressed: _isLoading ? null : _sendPasswordResetEmail,
+                          child: const Text('Forgot Password?'),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: _isLoading ? null : _login,
@@ -327,15 +381,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.pushNamed(context, '/register');
                       },
                       child: const Text("Don't have an account? Register"),
-                    ),
-                    TextButton(
-                      onPressed: _isLoading ? null : _sendPasswordResetEmail,
-                      child: const Text(
-                        "Forgot Password?",
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
                     ),
                   ],
                 ),

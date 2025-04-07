@@ -38,23 +38,34 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final isDarkMode = prefs.getBool('isDarkMode') ?? false;
   
-  // Always show onboarding for now - remove this line later when onboarding is verified
-  await prefs.setBool('hasSeenOnboarding', false);
+  // Get onboarding status
   final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
   
   try {
     await Firebase.initializeApp();
     logger.info('Firebase initialized successfully');
     
-    // Enable session persistence so users don't need to login every time
-    await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
-    logger.info('Firebase Auth persistence set to LOCAL');
-    
-    // Update current user ID if user is already logged in
+    // Checking for current user without signing them out
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       currentUserId = currentUser.uid;
       logger.info('Found existing logged in user: $currentUserId');
+      
+      // Make sure this user has a valid session by checking if they have a team
+      try {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+            
+        if (userDoc.exists) {
+          logger.info('Verified user document exists for persistent session');
+        }
+      } catch (e) {
+        logger.warning('Error verifying user session: $e');
+      }
+    } else {
+      logger.info('No logged in user found on app start');
     }
     
     // Connect to Firebase emulators for development
@@ -167,32 +178,8 @@ class _TaskHiveAppState extends State<TaskHiveApp> {
             return const LoginScreen();
           }
           
-          // Check if user has a team
-          return StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .doc(snapshot.data!.uid)
-                .snapshots(),
-            builder: (context, userSnapshot) {
-              if (userSnapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-              
-              // If user has no team, show team management
-              if (!userSnapshot.hasData || 
-                  !(userSnapshot.data!.exists) ||
-                  !_hasTeam(userSnapshot.data!.data() as Map<String, dynamic>?)) {
-                return const TeamScreen();
-              }
-              
-              // Otherwise, show dashboard
-              return const DashboardScreen();
-            },
-          );
+          // If logged in, always direct to team selection screen first
+          return const TeamScreen();
         },
       ),
       routes: {

@@ -21,6 +21,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _isCreator = false;
   List<Map<String, dynamic>> _attendees = [];
   String _creatorName = "Unknown";
+  String? _errorMessage;
   
   @override
   void initState() {
@@ -808,6 +809,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     List<String> selectedAttendees = List.from(_event!.attendees);
     List<Map<String, dynamic>> teamMembers = [];
     
+    // Initialize error message to null
+    setState(() {
+      _errorMessage = null;
+    });
+    
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -827,6 +833,36 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  
+                  // Error message container
+                  if (_errorMessage != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.red),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: const TextStyle(
+                                color: Colors.red, 
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   TextField(
                     controller: descriptionController,
                     maxLines: 3,
@@ -1017,8 +1053,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 endTime.minute,
                               );
                               
-                              // Adjust if end time is earlier in the day
-                              final adjustedEndDateTime = endDateTime.isBefore(newStartDateTime)
+                              // Adjust end time if it's earlier than start time (next day)
+                              final adjustedEndDateTime = endDateTime.hour < newStartDateTime.hour || 
+                                  (endDateTime.hour == newStartDateTime.hour && endDateTime.minute < newStartDateTime.minute)
                                   ? endDateTime.add(const Duration(days: 1))
                                   : endDateTime;
                                   
@@ -1027,16 +1064,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               
                               if (durationMinutes > 300) { // 5 hours = 300 minutes
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Meeting duration cannot exceed 5 hours'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
+                                  // Show error inside dialog
+                                  setState(() {
+                                    _errorMessage = 'Meeting duration cannot exceed 5 hours';
+                                  });
                                 }
                               } else {
                                 setState(() {
                                   startTime = time;
+                                  _errorMessage = null; // Clear error message
                                 });
                               }
                             }
@@ -1074,8 +1110,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 time.minute,
                               );
                               
-                              // Adjust if end time is earlier in the day
-                              final adjustedEndDateTime = newEndDateTime.isBefore(startDateTime)
+                              // Adjust end time if it's earlier than start time (next day)
+                              final adjustedEndDateTime = newEndDateTime.hour < startDateTime.hour || 
+                                  (newEndDateTime.hour == startDateTime.hour && newEndDateTime.minute < startDateTime.minute)
                                   ? newEndDateTime.add(const Duration(days: 1))
                                   : newEndDateTime;
                               
@@ -1084,16 +1121,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               
                               if (durationMinutes > 300) { // 5 hours = 300 minutes
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Meeting duration cannot exceed 5 hours'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
+                                  // Show error inside dialog
+                                  setState(() {
+                                    _errorMessage = 'Meeting duration cannot exceed 5 hours';
+                                  });
                                 }
                               } else {
                                 setState(() {
                                   endTime = time;
+                                  _errorMessage = null; // Clear error message
                                 });
                               }
                             }
@@ -1260,9 +1296,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               ElevatedButton(
                 onPressed: () async {
                   if (titleController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a meeting title')),
-                    );
+                    // Show error inside the dialog
+                    setState(() {
+                      _errorMessage = 'Please enter a meeting title';
+                    });
                     return;
                   }
                   
@@ -1285,19 +1322,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     );
                     
                     // Adjust end time if it's earlier than start time (next day)
-                    final adjustedEndDateTime = endDateTime.isBefore(startDateTime)
+                    final adjustedEndDateTime = endDateTime.hour < startDateTime.hour || 
+                        (endDateTime.hour == startDateTime.hour && endDateTime.minute < startDateTime.minute)
                         ? endDateTime.add(const Duration(days: 1))
                         : endDateTime;
                     
                     // Verify meeting duration doesn't exceed 5 hours
                     final durationMinutes = adjustedEndDateTime.difference(startDateTime).inMinutes;
                     if (durationMinutes > 300) { // 5 hours = 300 minutes
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Meeting duration cannot exceed 5 hours'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                      // Show error inside dialog
+                      setState(() {
+                        _errorMessage = 'Meeting duration cannot exceed 5 hours';
+                      });
                       return;
                     }
                     
@@ -1324,14 +1360,57 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       Navigator.pop(context);
                       _loadEvent(); // Reload the event data
                       
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Event updated successfully')),
+                      showDialog(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          title: const Text('Success'),
+                          content: const Text(
+                            'Event updated successfully',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          titleTextStyle: TextStyle(
+                            fontWeight: FontWeight.bold, 
+                            fontSize: 18,
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
+                          contentTextStyle: TextStyle(
+                            fontSize: 16,
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(dialogContext),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
                       );
                     }
                   } catch (e) {
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error updating event: ${e.toString()}')),
+                      showDialog(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          title: const Text('Error'),
+                          content: Text('Error updating event: ${e.toString()}'),
+                          backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                          titleTextStyle: TextStyle(
+                            fontWeight: FontWeight.bold, 
+                            fontSize: 18,
+                            color: Theme.of(context).colorScheme.onErrorContainer,
+                          ),
+                          contentTextStyle: TextStyle(
+                            fontSize: 16,
+                            color: Theme.of(context).colorScheme.onErrorContainer,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(dialogContext),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
                       );
                     }
                   }
@@ -1360,15 +1439,55 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         );
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not launch $normalizedUrl')),
+          showDialog(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: const Text('Error'),
+              content: Text('Could not launch $normalizedUrl'),
+              backgroundColor: Theme.of(context).colorScheme.errorContainer,
+              titleTextStyle: TextStyle(
+                fontWeight: FontWeight.bold, 
+                fontSize: 18,
+                color: Theme.of(context).colorScheme.onErrorContainer,
+              ),
+              contentTextStyle: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onErrorContainer,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid URL: $url (Error: $e)')),
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Error'),
+            content: Text('Invalid URL: $url (Error: $e)'),
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            titleTextStyle: TextStyle(
+              fontWeight: FontWeight.bold, 
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+            contentTextStyle: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
       }
     }
@@ -1394,16 +1513,56 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           );
         } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Could not open maps for: $location')),
+            showDialog(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Error'),
+                content: Text('Could not open maps for: $location'),
+                backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                titleTextStyle: TextStyle(
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 18,
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+                contentTextStyle: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
             );
           }
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error opening location: $e')),
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Error'),
+            content: Text('Error opening location: $e'),
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            titleTextStyle: TextStyle(
+              fontWeight: FontWeight.bold, 
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+            contentTextStyle: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
       }
     }
@@ -1452,8 +1611,31 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       
       if (mounted) {
         // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meeting deleted successfully')),
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Success'),
+            content: const Text(
+              'Meeting deleted successfully',
+              style: TextStyle(fontSize: 16),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            titleTextStyle: TextStyle(
+              fontWeight: FontWeight.bold, 
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+            contentTextStyle: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
         
         // Navigate back to previous screen
@@ -1462,8 +1644,28 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting meeting: ${e.toString()}')),
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Error'),
+            content: Text('Error deleting meeting: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            titleTextStyle: TextStyle(
+              fontWeight: FontWeight.bold, 
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+            contentTextStyle: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
       }
     }

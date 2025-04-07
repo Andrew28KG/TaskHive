@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:taskhive/main.dart';
 import 'package:intl/intl.dart';
 import 'package:taskhive/utils/navigation_utils.dart';
+import 'package:taskhive/screens/team_overview_page.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -140,12 +141,36 @@ class _ProgressScreenState extends State<ProgressScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Team Overview',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Team Overview',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward),
+                  onPressed: () async {
+                    final userDoc = await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(currentUserId)
+                        .get();
+                    
+                    final currentTeamId = userDoc.data()?['currentTeamId'];
+                    if (currentTeamId != null && mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TeamOverviewPage(teamId: currentTeamId),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Row(
@@ -249,6 +274,33 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 child: CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
+                    // Custom app bar with orange color
+                    SliverAppBar(
+                      expandedHeight: 80,
+                      pinned: true,
+                      elevation: 0,
+                      backgroundColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.deepOrange.shade900
+                        : Colors.orange.shade400,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(30),
+                          bottomRight: Radius.circular(30),
+                        ),
+                      ),
+                      flexibleSpace: FlexibleSpaceBar(
+                        title: Text(
+                          'Progress',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                            color: Colors.white,
+                          ),
+                        ),
+                        centerTitle: true,
+                      ),
+                    ),
                     SliverToBoxAdapter(
                       child: _buildTeamStats(),
                     ),
@@ -256,6 +308,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
                               'Hives Progress',
@@ -385,7 +438,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                                       valueColor: AlwaysStoppedAnimation<Color>(
                                                         Theme.of(context).brightness == Brightness.dark
                                                             ? Colors.deepOrange.shade300
-                                                            : Colors.amber.shade700,
+                                                            : Colors.orange.shade400,
                                                       ),
                                                     ),
                                                   ),
@@ -396,7 +449,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                                   style: TextStyle(
                                                     color: Theme.of(context).brightness == Brightness.dark
                                                         ? Colors.deepOrange.shade300
-                                                        : Colors.amber.shade700,
+                                                        : Colors.orange.shade700,
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
