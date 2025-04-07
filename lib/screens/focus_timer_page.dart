@@ -20,6 +20,7 @@ class _FocusTimerPageState extends State<FocusTimerPage> with WidgetsBindingObse
   // Timer state
   late Timer? _timer;
   bool _isTimerRunning = false;
+  bool _wasPaused = false; // New flag to track if timer was paused
   int _remainingSeconds = 0;
   int _selectedTimer = 25; // Default 25 min
   final List<int> _timerOptions = [15, 25, 30, 45, 60];
@@ -104,13 +105,24 @@ class _FocusTimerPageState extends State<FocusTimerPage> with WidgetsBindingObse
   }
   
   void _startTimer() {
-    setState(() {
-      _remainingSeconds = _selectedTimer * 60;
-      _isTimerRunning = true;
-    });
+    print("_startTimer called - starting timer for $_selectedTimer minutes");
+    
+    if (!_wasPaused) {
+      // This is a fresh start, reset the time
+      setState(() {
+        _remainingSeconds = _selectedTimer * 60;
+        _isTimerRunning = true;
+      });
+    } else {
+      // This is a resume from pause, just update the running state
+      setState(() {
+        _isTimerRunning = true;
+        _wasPaused = false; // Reset the paused flag
+      });
+    }
 
-    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      print("Timer tick: $_remainingSeconds seconds remaining");
       setState(() {
         if (_remainingSeconds > 0) {
           _remainingSeconds--;
@@ -118,6 +130,7 @@ class _FocusTimerPageState extends State<FocusTimerPage> with WidgetsBindingObse
           _timer?.cancel();
           _timer = null;
           _isTimerRunning = false;
+          _wasPaused = false; // Reset paused flag when timer completes
           _playAlarmSound();
           _showTimerCompleteDialog();
         }
@@ -128,7 +141,10 @@ class _FocusTimerPageState extends State<FocusTimerPage> with WidgetsBindingObse
   void _pauseTimer() {
     _timer?.cancel();
     _timer = null;
-    setState(() => _isTimerRunning = false);
+    setState(() {
+      _isTimerRunning = false;
+      _wasPaused = true; // Set the paused flag when pausing
+    });
   }
 
   void _resetTimer() {
@@ -137,6 +153,7 @@ class _FocusTimerPageState extends State<FocusTimerPage> with WidgetsBindingObse
     setState(() {
       _remainingSeconds = _selectedTimer * 60;
       _isTimerRunning = false;
+      _wasPaused = false; // Reset paused flag when resetting
     });
   }
   
@@ -477,6 +494,7 @@ class _FocusTimerPageState extends State<FocusTimerPage> with WidgetsBindingObse
                     setState(() {
                       _selectedTimer = minutes;
                       _remainingSeconds = minutes * 60;
+                      _wasPaused = false; // Reset paused state when selecting new duration
                     });
                   }
                 },
@@ -739,6 +757,7 @@ class _FocusTimerPageState extends State<FocusTimerPage> with WidgetsBindingObse
                   setState(() {
                     _selectedTimer = totalSeconds ~/ 60;
                     _remainingSeconds = totalSeconds;
+                    _wasPaused = false; // Reset paused state when setting custom duration
                   });
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
