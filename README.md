@@ -19,6 +19,7 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 - **Event Planning**: Schedule team meetings and events with attendee selection
 - **Dashboard**: Get an overview of your tasks, upcoming deadlines, and team activities
 - **Discussion System**: Chat with your team in dedicated channels for tasks and projects
+- **Image Sharing**: Upload and share images in team chats and task discussions
 - **User Profiles**: Customize your profile and manage notification preferences
 - **Dark/Light Mode**: Choose between light and dark themes for comfortable viewing
 - **Progress Tracking**: Monitor task completion and project progress
@@ -121,7 +122,10 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 ### 10. Discussions
 - Access the Team Chat for team-wide discussions
 - Chat about specific tasks in dedicated discussion channels
+- Share images directly in chats with gallery upload functionality
+- Messages display in chronological order with newest at the bottom
 - Pin important messages for easy reference
+- Like messages to indicate agreement or approval
 - See unread message count indicators
 - Organize chats by hives/projects
 
@@ -140,6 +144,9 @@ TaskHive takes security seriously:
 
 ## Recent Updates
 
+- Added image upload functionality in chat and discussions for sharing visual content
+- Improved chat message ordering with clear chronological view
+- Fixed Firestore database queries for better chat performance 
 - Added Team Info page accessible from drawer menu to view team members and their statistics
 - Updated UI with consistent orange headers across all screens for better visual cohesion
 - Improved Focus screen with dedicated timer and task details view
