@@ -86,9 +86,6 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       logger.info('Attempting to sign in with email: ${_emailController.text}');
       
-      // Ensure persistence is set to LOCAL for current session
-      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
-      
       final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),

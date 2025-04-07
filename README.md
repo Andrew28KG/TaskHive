@@ -105,6 +105,8 @@ TaskHive offers a comprehensive set of features to enhance team productivity:
 - Invite members to your team using team codes
 - Manage team settings and member permissions
 - Switch between teams easily
+- View detailed team info with the new Team Info page
+- Check team member roles and task statistics
 
 ### 8. Progress Tracking
 - Monitor task completion status
@@ -138,6 +140,10 @@ TaskHive takes security seriously:
 
 ## Recent Updates
 
+- Added Team Info page accessible from drawer menu to view team members and their statistics
+- Updated UI with consistent orange headers across all screens for better visual cohesion
+- Improved Focus screen with dedicated timer and task details view
+- Enhanced Calendar, Chat, and Focus pages with responsive headers
 - Added enhanced security with team selection on each app restart
 - Improved navigation with bottom bar and drawer menu
 - Implemented persistent login for seamless user experience

@@ -35,9 +35,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Set persistence to LOCAL for this session
-      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
-      
       // Create user account
       final userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
