@@ -241,6 +241,9 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
       // Add the main chat to the list
       taskDiscussions.insert(0, mainChatInfo);
       
+      // Also add to tasksByHive
+      tasksByHive['_main'] = [mainChatInfo];
+      
       // Sort tasks within each hive by last activity time (most recent first)
       tasksByHive.forEach((hiveId, tasks) {
         tasks.sort((a, b) {
@@ -440,6 +443,7 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                         ),
                       ),
                       _buildPinnedChats(),
+                      _buildTeamChat(),
                       _buildGroupedChats(),
                     ],
                   ),
@@ -483,6 +487,234 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
             ),
           ),
           ...pinnedTasks.map((task) => _buildSimplifiedTaskDiscussionItem(task)),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildTeamChat() {
+    // Find the team chat entry
+    final teamChat = _taskDiscussions.firstWhere(
+      (task) => task.hiveId == '_main',
+      orElse: () => TaskDiscussionInfo(
+        taskId: 'team_${_currentTeamId}',
+        taskTitle: 'Team Chat',
+        discussionCount: 0,
+        unreadCount: 0,
+        lastActivityTime: null,
+        assignedUserName: '',
+        assignedUserId: '',
+        status: 'main',
+        hiveName: 'Main Chat',
+        hiveId: '_main',
+      ),
+    );
+    
+    if (teamChat.taskId.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+    
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 8),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[600],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.people_alt,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Team Communication Hub',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange[800],
+                    fontSize: 16,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDarkMode
+                    ? [Colors.deepOrange.shade900, Colors.orange.shade800]
+                    : [Colors.orange.shade100, Colors.deepOrange.shade200],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.orange.withOpacity(isDarkMode ? 0.3 : 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DiscussionScreen(
+                      taskId: teamChat.taskId,
+                      taskTitle: teamChat.taskTitle,
+                    ),
+                  ),
+                ).then((_) => _loadTaskDiscussions());
+              },
+              onLongPress: () => _showChatOptions(teamChat),
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isDarkMode ? Colors.deepOrange.shade700 : Colors.white.withOpacity(0.8),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.forum_rounded,
+                            size: 24,
+                            color: isDarkMode ? Colors.white : Colors.deepOrange,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                teamChat.taskTitle,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: isDarkMode ? Colors.white : Colors.deepOrange.shade800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Collaborate with your entire team',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDarkMode ? Colors.white70 : Colors.deepOrange.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (teamChat.unreadCount > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade400,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.mark_chat_unread,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  teamChat.unreadCount.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isDarkMode ? Colors.deepOrange.shade700.withOpacity(0.7) : Colors.white.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.message_rounded,
+                                size: 14,
+                                color: isDarkMode ? Colors.white70 : Colors.deepOrange,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Tap to open',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDarkMode ? Colors.white70 : Colors.deepOrange,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (teamChat.lastActivityTime != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? Colors.deepOrange.shade700.withOpacity(0.7) : Colors.white.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 14,
+                                  color: isDarkMode ? Colors.white70 : Colors.deepOrange,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatDateTime(teamChat.lastActivityTime!),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDarkMode ? Colors.white70 : Colors.deepOrange,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const Divider(indent: 16, endIndent: 16),
         ],
       ),
     );
