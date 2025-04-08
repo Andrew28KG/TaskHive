@@ -690,6 +690,70 @@ class _DiscussionScreenState extends State<DiscussionScreen> with SingleTickerPr
     }
   }
 
+  Future<void> _deleteMessage(DiscussionPost post) async {
+    try {
+      // Only allow users to delete their own messages
+      if (post.userId != currentUserId) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You can only delete your own messages')),
+          );
+        }
+        return;
+      }
+      
+      // Confirm deletion
+      final bool confirmDelete = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Delete Message'),
+          content: const Text('Are you sure you want to delete this message? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      ) ?? false;
+      
+      if (!confirmDelete) return;
+      
+      // Check if this is a team chat
+      final bool isTeamChat = widget.taskId.startsWith('team_');
+      
+      // Delete the message from appropriate collection
+      await FirebaseFirestore.instance
+          .collection(isTeamChat ? 'team_discussions' : 'task_discussions')
+          .doc(post.id)
+          .delete();
+      
+      // Refresh discussions
+      _loadDiscussions();
+      
+      // Show feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Message deleted'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error deleting message: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting message: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _markDiscussionsAsRead() async {
     try {
       if (currentUserId == null) return;
@@ -939,6 +1003,17 @@ class _DiscussionScreenState extends State<DiscussionScreen> with SingleTickerPr
                         ],
                       ),
                     ),
+                    // Action buttons
+                    if (isCurrentUserPost) 
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                        onPressed: () => _deleteMessage(post),
+                        tooltip: 'Delete message',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        splashRadius: 18,
+                      ),
+                    const SizedBox(width: 4),
                     if (post.isPinned)
                       Icon(
                         Icons.push_pin,
@@ -1196,7 +1271,11 @@ class _DiscussionScreenState extends State<DiscussionScreen> with SingleTickerPr
                 onPressed: _isUploading ? null : _pickImage,
                 icon: Icon(
                   Icons.image,
-                  color: _isUploading ? Colors.grey : Theme.of(context).primaryColor,
+                  color: _isUploading 
+                      ? Colors.grey 
+                      : Theme.of(context).brightness == Brightness.dark 
+                          ? Colors.lightBlue[300] 
+                          : Theme.of(context).primaryColor,
                 ),
               ),
               Expanded(
