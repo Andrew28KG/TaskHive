@@ -146,7 +146,7 @@ TaskHive takes security seriously:
 
 - Added image upload functionality in chat and discussions for sharing visual content
 - Improved chat message ordering with clear chronological view
-- Fixed Firestore database queries for better chat performance 
+- Fixed Firestore database queries for better chat performance
 - Added Team Info page accessible from drawer menu to view team members and their statistics
 - Updated UI with consistent orange headers across all screens for better visual cohesion
 - Improved Focus screen with dedicated timer and task details view
